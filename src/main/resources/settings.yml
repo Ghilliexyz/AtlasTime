@@ -1,0 +1,115 @@
+#
+#      /$$$$$$  /$$$$$$$$ /$$        /$$$$$$   /$$$$$$        /$$$$$$$$ /$$$$$$ /$$      /$$ /$$$$$$$$
+#     /$$__  $$|__  $$__/| $$       /$$__  $$ /$$__  $$      |__  $$__/|_  $$_/| $$$    /$$$| $$_____/
+#    | $$  \ $$   | $$   | $$      | $$  \ $$| $$  \__/         | $$     | $$  | $$$$  /$$$$| $$
+#    | $$$$$$$$   | $$   | $$      | $$$$$$$$|  $$$$$$          | $$     | $$  | $$ $$/$$ $$| $$$$$
+#    | $$__  $$   | $$   | $$      | $$__  $$ \____  $$         | $$     | $$  | $$  $$$| $$| $$__/
+#    | $$  | $$   | $$   | $$      | $$  | $$ /$$  \ $$         | $$     | $$  | $$\  $ | $$| $$
+#    | $$  | $$   | $$   | $$$$$$$$| $$  | $$|  $$$$$$/         | $$    /$$$$$$| $$ \/  | $$| $$$$$$$$
+#    |__/  |__/   |__/   |________/|__/  |__/ \______/          |__/   |______/|__/     |__/|________/
+#
+#    This plugin was made by _Ghillie
+#
+#    Plugin Version 1.0.0
+#
+#    Discord: https://discord.gg/f9swPR7NnV
+#
+
+Command-Messages:
+  ##########################################################
+  #                                                        #
+  #                   DEFAULT MESSAGES                     #
+  #                                                        #
+  ##########################################################
+  Command-Messages-UnknownCommand:
+    - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
+    - ""
+    - "&c● &7This command is not recognised."
+    - ""
+    - "&c&m&l-----------------------------------------"
+  Command-Messages-NoPermissions:
+    - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
+    - ""
+    - "&c● &7You do not have the correct &cPermissions &7or you are not &cOped&7."
+    - ""
+    - "&c&m&l-----------------------------------------"
+  Command-Messages-NotAPlayer:
+    - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
+    - ""
+    - "&c● &7This command can only be used by players."
+    - ""
+    - "&c&m&l-----------------------------------------"
+  ##########################################################
+  #                                                        #
+  #                RELOAD CONFIG MESSAGES                  #
+  #                                                        #
+  ##########################################################
+  Command-Messages-ReloadConfig-ConfigReloaded:
+    - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
+    - ""
+    - "&c● &7You have &aReloaded &7the config."
+    - ""
+    - "&c&m&l-----------------------------------------"
+
+#Sound Manager
+#https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html < list of all sounds in minecraft.
+TimeSounds:
+  #------------------TIME COMPLETED SOUNDS------------------#
+  #If True the Time Completed sound will play.
+  Time-Completed-Sound-Toggle: true
+  #The sound that plays when the Time is completed.
+  Time-Completed-Sound: BLOCK_BELL_USE
+  #The volume the sound plays at when the Time is completed.
+  Time-Completed-Volume: 1
+  #The pitch the sound plays at when the Time is completed.
+  Time-Completed-Pitch: 0.1
+
+Time-Checker:
+  #The amount of time it will check each player if they have passed the time frames listed below.
+  #for example: (5 = 5 minutes) so every 5 minutes it will look through the database to see
+  #if anyone's playtime has surpassed the time frames.
+  Time-Checker-Amount: 5
+
+#This is the time frames, for each player that passes a specified time frame the respective commands will run.
+Time-Frames:
+  Time-Frame-1:
+    Time-Frame-Weeks: 0
+    Time-Frame-Days: 0
+    Time-Frame-Hours: 0
+    Time-Frame-Minutes: 0
+    Time-Frame-Seconds: 30
+    #The Commands that will run once a player reaches the time frame.
+    #NOTE: This will run as a server command, make sure to do {playerName} if you want to get the exact player.
+    Time-Frame-Commands:
+      - "say Congrats {playerName}! for completing the 30 second mark!"
+    #If this is true then the Completed Message will send.
+    Time-Frame-Completed-Message-Toggle: true
+    #The message that will be sent when the time frame is completed.
+    Time-Frame-Completed-Message:
+      - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
+      -  ""
+      -  "&c● &7You just Completed the 30 Second mark!"
+      -  "&c● &7Your total playtime: &e{playerPlayTimeWeeks} &7weeks &e{playerPlayTimeDays} &7days &e{playerPlayTimeHours} &7hours &e{playerPlayTimeMinutes} &7minutes &e{playerPlayTimeSeconds}&7s"
+      -  ""
+      -  "&c&m&l-----------------------------------------"
+  Time-Frame-2:
+    Time-Frame-Weeks: 0
+    Time-Frame-Days: 1
+    Time-Frame-Hours: 0
+    Time-Frame-Minutes: 0
+    Time-Frame-Seconds: 0
+    # The Commands that will run once a player reaches the time frame.
+    # NOTE: This will run as a server command, make sure to do {playerName} if you want to get the exact player.
+    Time-Frame-Commands:
+      - "say Congrats {playerName}! for completing the 1 day mark!"
+      - "give {playerName} diamond 1"
+    #If this is true then the Completed Message will send.
+    Time-Frame-Completed-Message-Toggle: true
+    #The message that will be sent when the time frame is completed.
+    Time-Frame-Completed-Message:
+      - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
+      -  ""
+      -  "&c● &7You just Completed the 1 Day mark!"
+      -  "&c● &7Your total playtime: &e{playerPlayTimeWeeks} &7weeks &e{playerPlayTimeDays} &7days &e{playerPlayTimeHours} &7hours &e{playerPlayTimeMinutes} &7minutes &e{playerPlayTimeSeconds}&7s"
+      -  ""
+      -  "&c&m&l-----------------------------------------"

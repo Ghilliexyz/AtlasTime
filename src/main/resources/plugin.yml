@@ -1,0 +1,25 @@
+name: AtlasTime
+main: com.atlasplugins.atlastime.Main
+
+version: '${project.version}'
+authors: [Ghillie]
+
+api-version: '1.21'
+description: This plugin tracks players time and allows you to run commands once a player has reached a set amount of play time
+
+# This sets PlaceholderAPI as an optional dependency for your plugin.
+softdepend: [PlaceholderAPI]
+
+commands:
+  atlastime:
+    description: Atlas Time Command
+    usage: /atlastime [subcommand]
+    aliases: [atime, at]
+
+permissions:
+  atlastime.help:
+    description: Permission needed to use the help command.
+    default: false
+  atlastime.reloadconfig:
+    description: Permission needed to use the reload command.
+    default: false
