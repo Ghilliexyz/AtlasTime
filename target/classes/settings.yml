@@ -69,6 +69,8 @@ Time-Checker:
   #for example: (5 = 5 minutes) so every 5 minutes it will look through the database to see
   #if anyone's playtime has surpassed the time frames.
   Time-Checker-Amount: 5
+  #This is how the time format looks for all time based messages
+  Time-Formatter: "%d weeks %d days %d hours %d min %d sec"
 
 #This is the time frames, for each player that passes a specified time frame the respective commands will run.
 Time-Frames:
@@ -89,7 +91,7 @@ Time-Frames:
       - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
       -  ""
       -  "&c● &7You just Completed the 30 Second mark!"
-      -  "&c● &7Your total playtime: &e{playerPlayTimeWeeks} &7weeks &e{playerPlayTimeDays} &7days &e{playerPlayTimeHours} &7hours &e{playerPlayTimeMinutes} &7minutes &e{playerPlayTimeSeconds}&7s"
+      -  "&c● &7Your total playtime: &e{playerPlayTime}"
       -  ""
       -  "&c&m&l-----------------------------------------"
   Time-Frame-2:
@@ -110,6 +112,6 @@ Time-Frames:
       - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
       -  ""
       -  "&c● &7You just Completed the 1 Day mark!"
-      -  "&c● &7Your total playtime: &e{playerPlayTimeWeeks} &7weeks &e{playerPlayTimeDays} &7days &e{playerPlayTimeHours} &7hours &e{playerPlayTimeMinutes} &7minutes &e{playerPlayTimeSeconds}&7s"
+      -  "&c● &7Your total playtime: &e{playerPlayTime}"
       -  ""
       -  "&c&m&l-----------------------------------------"

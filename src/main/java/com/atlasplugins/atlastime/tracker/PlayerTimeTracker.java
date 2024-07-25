@@ -94,6 +94,8 @@ public class PlayerTimeTracker {
             int playtimeDays = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60 * 24); // convert ticks to days
             int playtimeWeeks = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60 * 24 * 7); // convert ticks to weeks
 
+            String playtimeTotal = getPlayTime(player);
+
 
             // Convert time components into a total threshold in seconds
 //            long threshold = weeks * 604800 + days * 86400 + hours * 3600 + minutes * 60 + seconds;
@@ -110,7 +112,9 @@ public class PlayerTimeTracker {
                     saveExecutionStatus(playerId, timeFrameIndex, false);
                 }
 
-                if (player.getStatistic(Statistic.PLAY_ONE_MINUTE) >= timeFrame.getPlaytimeThreshold() && !timeFrame.hasExecuted(playerId)) {
+
+                // Debugging: print the total threshold
+                if (playtimeSeconds >= timeFrame.getPlaytimeThreshold() && !timeFrame.hasExecuted(playerId)) {
 //                    main.getLogger().info("Threshold met for TimeFrame " + (timeFrameIndex + 1) + ". Executing commands.");
 //                    main.getLogger().info("Commands:" + timeFrame.getCommands());
 
@@ -126,11 +130,7 @@ public class PlayerTimeTracker {
                             String withPAPISet = main.setPlaceholders(player, timeCompletedMessage);
                             player.sendMessage(Main.color(withPAPISet)
                                     .replace("{playerName}", player.getName())
-                                    .replace("{playerPlayTimeSeconds}", String.valueOf(playtimeSeconds))
-                                    .replace("{playerPlayTimeMinutes}", String.valueOf(playtimeMinutes))
-                                    .replace("{playerPlayTimeHours}", String.valueOf(playtimeHours))
-                                    .replace("{playerPlayTimeDays}", String.valueOf(playtimeDays))
-                                    .replace("{playerPlayTimeWeeks}", String.valueOf(playtimeWeeks)));
+                                    .replace("{playerPlayTime}", playtimeTotal));
                         }
                     }
 
@@ -177,11 +177,13 @@ public class PlayerTimeTracker {
             // Convert time components into a total threshold in seconds
             long threshold = weeks * 604800 + days * 86400 + hours * 3600 + minutes * 60 + seconds;
 
+
             // Get the commands and completed message toggle
             List<String> commands = config.getStringList(timeFrameKey + ".Time-Frame-Commands");
             boolean completedMessageToggle = config.getBoolean(timeFrameKey + ".Time-Frame-Completed-Message-Toggle");
             List<String> completedMessage = config.getStringList(timeFrameKey + ".Time-Frame-Completed-Message");
 
+            // Debugging: print the total threshold
             // Create the TimeFrame object and add it to the list
             Main.TimeFrame timeFrame = new Main.TimeFrame(threshold, commands);
             main.timeFrames.add(timeFrame);
@@ -198,5 +200,22 @@ public class PlayerTimeTracker {
                 e.printStackTrace();
             }
         }
+    }
+
+
+    public String getPlayTime(Player p) {
+        // Calculator for time since last death.
+        int ticks = p.getStatistic(Statistic.PLAY_ONE_MINUTE);
+        int seconds = ticks / 20;
+        int minutes = seconds / 60;
+        int hours = minutes / 60;
+        int days = hours / 24;
+        int weeks = days / 7;
+
+        String timeFormat = main.getSettingsConfig().getString("Time-Checker.Time-Formatter");
+
+        // reformat the ticks into timer.
+        assert timeFormat != null;
+        return String.format(timeFormat, weeks, days % 7, hours % 24, minutes % 60, seconds % 60);
     }
 }
