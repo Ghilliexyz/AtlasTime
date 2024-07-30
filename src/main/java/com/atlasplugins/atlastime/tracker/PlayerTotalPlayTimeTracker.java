@@ -102,9 +102,9 @@ public class PlayerTotalPlayTimeTracker {
             int timeFrameIndex = 0;
 
             for (Main.TotalPlayTimeFrames TimeFrames : totalPlayTimeFrames) {
-                main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
-                main.getLogger().info("Player playtime: " + playtimeMinutes + " minutes, Threshold: " + TimeFrames.getPlaytimeThreshold());
-                main.getLogger().info("hasExecuted: " + TimeFrames.hasExecuted(playerId));
+//                main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
+//                main.getLogger().info("Player playtime: " + playtimeMinutes + " minutes, Threshold: " + TimeFrames.getPlaytimeThreshold());
+//                main.getLogger().info("hasExecuted: " + TimeFrames.hasExecuted(playerId));
 
                 if(player.getStatistic(Statistic.PLAY_ONE_MINUTE) < TimeFrames.getPlaytimeThreshold())
                 {
@@ -184,9 +184,9 @@ public class PlayerTotalPlayTimeTracker {
             Main.TotalPlayTimeFrames totalPlayTimeFrames = new Main.TotalPlayTimeFrames(threshold, commands);
             main.totalPlayTimeFrames.add(totalPlayTimeFrames);
 
-            main.getLogger().info("------------------------------------------------");
-            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
-            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
+//            main.getLogger().info("------------------------------------------------");
+//            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
+//            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
 
             timeFrameIndex++;
         }

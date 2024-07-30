@@ -102,9 +102,9 @@ public class PlayerDailyPlayTimeTracker {
             int timeFrameIndex = 0;
 
             for (Main.DailyPlayTimeFrames TimeFrames : dailyPlayTimeFrames) {
-                main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
-                main.getLogger().info("Player playtime: " + playtimeMinutes + " minutes, Threshold: " + TimeFrames.getPlaytimeThreshold());
-                main.getLogger().info("hasExecuted: " + TimeFrames.hasExecuted(playerId));
+//                main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
+//                main.getLogger().info("Player playtime: " + playtimeMinutes + " minutes, Threshold: " + TimeFrames.getPlaytimeThreshold());
+//                main.getLogger().info("hasExecuted: " + TimeFrames.hasExecuted(playerId));
 
                 if(player.getStatistic(Statistic.PLAY_ONE_MINUTE) < TimeFrames.getPlaytimeThreshold())
                 {
@@ -161,7 +161,6 @@ public class PlayerDailyPlayTimeTracker {
         main.dailyPlayTimeFrames = new ArrayList<>();
         FileConfiguration config = main.getDailyPlayTimeConfig();
         int timeFrameIndex = 1;
-        main.getLogger().info("I WAS HERE");
 
         // Loop through each time frame in the config
         while (config.contains("DailyPlayTime-Frames.DailyPlayTime-Frame-" + timeFrameIndex)) {
@@ -186,9 +185,9 @@ public class PlayerDailyPlayTimeTracker {
             Main.DailyPlayTimeFrames dailyPlayTimeFrames = new Main.DailyPlayTimeFrames(threshold, commands);
             main.dailyPlayTimeFrames.add(dailyPlayTimeFrames);
 
-            main.getLogger().info("------------------------------------------------");
-            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
-            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
+//            main.getLogger().info("------------------------------------------------");
+//            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
+//            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
 
             timeFrameIndex++;
         }
