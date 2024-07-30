@@ -6,7 +6,7 @@
 
   <groupId>com.atlasplugins</groupId>
   <artifactId>AtlasTime</artifactId>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <packaging>jar</packaging>
 
   <name>AtlasTime</name>
@@ -37,9 +37,6 @@
         <executions>
           <execution>
             <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
           </execution>
         </executions>
       </plugin>

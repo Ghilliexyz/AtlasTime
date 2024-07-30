@@ -12,6 +12,7 @@ public class onPlayerEvent implements Listener {
 
     @EventHandler
     private void onPlayerJoin(PlayerJoinEvent e) {
-        main.getPlayerTimeTracker().checkAllPlayersPlaytime();
+        main.getPlayerTotalPlayTimeTracker().checkAllPlayersPlaytime();
+        main.getPlayerDailyPlayTimeTracker().checkAllPlayersPlaytime();
     }
 }

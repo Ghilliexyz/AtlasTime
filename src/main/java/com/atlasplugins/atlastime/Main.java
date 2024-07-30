@@ -2,7 +2,8 @@ package com.atlasplugins.atlastime;
 
 import com.atlasplugins.atlastime.commands.CommandRouter;
 import com.atlasplugins.atlastime.listeners.onPlayerEvent;
-import com.atlasplugins.atlastime.tracker.PlayerTimeTracker;
+import com.atlasplugins.atlastime.tracker.PlayerDailyPlayTimeTracker;
+import com.atlasplugins.atlastime.tracker.PlayerTotalPlayTimeTracker;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -32,15 +33,21 @@ public final class Main extends JavaPlugin {
     // Config Stuff
     private FileConfiguration settingsConfig;
     private File settingsConfigFile;
+    private FileConfiguration totalPlayTimeConfig;
+    private File totalPlayTimeConfigFile;
+    private FileConfiguration dailyPlayTimeConfig;
+    private File dailyPlayTimeConfigFile;
 
     // Player Time Stuff
-    public List<TimeFrame> timeFrames; // Make this public so it's accessible
+    public List<TotalPlayTimeFrames> totalPlayTimeFrames; // Make this public so it's accessible
+    public List<DailyPlayTimeFrames> dailyPlayTimeFrames; // Make this public so it's accessible
 
     // Command Router Stuff
     private CommandRouter commandRouter;
 
-    // Player Time Tracker
-    private static PlayerTimeTracker playerTimeTracker;
+    // Player Time Trackers
+    private static PlayerTotalPlayTimeTracker playerTotalPlayTimeTracker;
+    private static PlayerDailyPlayTimeTracker playerDailyPlayTimeTracker;
 
     @Override
     public void onEnable() {
@@ -57,13 +64,18 @@ public final class Main extends JavaPlugin {
 
         // Load custom configs
         loadSettingsConfig();
+        loadTotalPlayTimeConfig();
+        loadDailyPlayTimeConfig();
 
-        // Initialize PlayerTimeTracker
-        playerTimeTracker = new PlayerTimeTracker(this);
+        // Initialize Player Trackers
+        playerTotalPlayTimeTracker = new PlayerTotalPlayTimeTracker(this);
+        playerDailyPlayTimeTracker = new PlayerDailyPlayTimeTracker(this);
 
         // Load configurations and execution statuses
-        playerTimeTracker.loadConfiguration(); // Ensure this is called
-        playerTimeTracker.loadExecutionStatus(); // Load execution statuses from the database
+        playerTotalPlayTimeTracker.loadConfiguration(); // Ensure this is called
+        playerTotalPlayTimeTracker.loadExecutionStatus(); // Load execution statuses from the database
+        playerDailyPlayTimeTracker.loadConfiguration(); // Ensure this is called
+        playerDailyPlayTimeTracker.loadExecutionStatus(); // Load execution statuses from the database
 
         // Register commands
         this.commandRouter = new CommandRouter(this);
@@ -76,7 +88,7 @@ public final class Main extends JavaPlugin {
         long autoCheckPlayerTime = getSettingsConfig().getLong("Time-Checker.Time-Checker-Amount");
 
         // Schedule a task to check playtime every minute
-        Bukkit.getScheduler().runTaskTimer(this, () -> playerTimeTracker.checkAllPlayersPlaytime(), 0L, TimeUnit.MINUTES.toSeconds(autoCheckPlayerTime) * 20L);
+        Bukkit.getScheduler().runTaskTimer(this, this::CheckTimeTrackers, 0L, TimeUnit.MINUTES.toSeconds(autoCheckPlayerTime) * 20L);
 
         // BStats Info
         int pluginId = 22774; // <-- Replace with the id of your plugin!
@@ -84,7 +96,7 @@ public final class Main extends JavaPlugin {
 
         // Plugin Startup Message
         Bukkit.getConsoleSender().sendMessage(color("&4---------------------"));
-        Bukkit.getConsoleSender().sendMessage(color("&7&l[&c&lAtlas Time&7&l] &e1.0.0"));
+        Bukkit.getConsoleSender().sendMessage(color("&7&l[&c&lAtlas Time&7&l] &e1.0.1"));
         Bukkit.getConsoleSender().sendMessage(color(""));
         Bukkit.getConsoleSender().sendMessage(color("&cMade by _Ghillie"));
         Bukkit.getConsoleSender().sendMessage(color(""));
@@ -98,12 +110,17 @@ public final class Main extends JavaPlugin {
 
         // Plugin Shutdown Message
         Bukkit.getConsoleSender().sendMessage(color("&4---------------------"));
-        Bukkit.getConsoleSender().sendMessage(color("&7&l[&c&lAtlas Time&7&l] &e1.0.0"));
+        Bukkit.getConsoleSender().sendMessage(color("&7&l[&c&lAtlas Time&7&l] &e1.0.1"));
         Bukkit.getConsoleSender().sendMessage(color(""));
         Bukkit.getConsoleSender().sendMessage(color("&cMade by _Ghillie"));
         Bukkit.getConsoleSender().sendMessage(color(""));
         Bukkit.getConsoleSender().sendMessage(color("&cPlugin &4Disabled"));
         Bukkit.getConsoleSender().sendMessage(color("&4---------------------"));
+    }
+
+    private void CheckTimeTrackers() {
+        playerTotalPlayTimeTracker.checkAllPlayersPlaytime();
+        playerDailyPlayTimeTracker.checkAllPlayersPlaytime();
     }
 
     public String setPlaceholders(Player p, String text) {
@@ -123,6 +140,14 @@ public final class Main extends JavaPlugin {
         return settingsConfig;
     }
 
+    public FileConfiguration getTotalPlayTimeConfig() {
+        return totalPlayTimeConfig;
+    }
+
+    public FileConfiguration getDailyPlayTimeConfig() {
+        return dailyPlayTimeConfig;
+    }
+
     public void saveSettingsConfig() {
         try {
             settingsConfig.save(settingsConfigFile);
@@ -139,20 +164,60 @@ public final class Main extends JavaPlugin {
         settingsConfig = YamlConfiguration.loadConfiguration(settingsConfigFile);
     }
 
-    public List<TimeFrame> getTimeFrames() {
-        return timeFrames;
+    public void saveTotalPlayTimeConfig() {
+        try {
+            totalPlayTimeConfig.save(totalPlayTimeConfigFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public PlayerTimeTracker getPlayerTimeTracker() {
-        return playerTimeTracker;
+    public void loadTotalPlayTimeConfig() {
+        totalPlayTimeConfigFile = new File(getDataFolder(), "totalPlayTime.yml");
+        if (!totalPlayTimeConfigFile.exists()) {
+            saveResource("totalPlayTime.yml", false);
+        }
+        totalPlayTimeConfig = YamlConfiguration.loadConfiguration(totalPlayTimeConfigFile);
     }
 
-    public static class TimeFrame {
+    public void saveDailyPlayTimeConfig() {
+        try {
+            dailyPlayTimeConfig.save(dailyPlayTimeConfigFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void loadDailyPlayTimeConfig() {
+        dailyPlayTimeConfigFile = new File(getDataFolder(), "dailyPlayTime.yml");
+        if (!dailyPlayTimeConfigFile.exists()) {
+            saveResource("dailyPlayTime.yml", false);
+        }
+        dailyPlayTimeConfig = YamlConfiguration.loadConfiguration(dailyPlayTimeConfigFile);
+    }
+
+    public List<TotalPlayTimeFrames> getTotalPlayTimeFrames() {
+        return totalPlayTimeFrames;
+    }
+
+    public List<DailyPlayTimeFrames> getDailyPlayTimeFrames() {
+        return dailyPlayTimeFrames;
+    }
+
+    public PlayerTotalPlayTimeTracker getPlayerTotalPlayTimeTracker() {
+        return playerTotalPlayTimeTracker;
+    }
+
+    public PlayerDailyPlayTimeTracker getPlayerDailyPlayTimeTracker() {
+        return playerDailyPlayTimeTracker;
+    }
+
+    public static class TotalPlayTimeFrames {
         private final long playtimeThreshold;
         private final List<String> commands;
         private final Map<UUID, Boolean> executedPlayers;
 
-        public TimeFrame(long playtimeThreshold, List<String> commands) {
+        public TotalPlayTimeFrames(long playtimeThreshold, List<String> commands) {
             this.playtimeThreshold = playtimeThreshold;
             this.commands = commands;
             this.executedPlayers = new HashMap<>();
@@ -176,6 +241,36 @@ public final class Main extends JavaPlugin {
             executedPlayers.put(playerId, true);
 //            Main.instance.getLogger().info("Marked as executed for player " + playerId);
         }
+    }
 
+    public static class DailyPlayTimeFrames {
+        private final long playtimeThreshold;
+        private final List<String> commands;
+        private final Map<UUID, Boolean> executedPlayers;
+
+        public DailyPlayTimeFrames(long playtimeThreshold, List<String> commands) {
+            this.playtimeThreshold = playtimeThreshold;
+            this.commands = commands;
+            this.executedPlayers = new HashMap<>();
+        }
+
+        public long getPlaytimeThreshold() {
+            return playtimeThreshold;
+        }
+
+        public List<String> getCommands() {
+            return commands;
+        }
+
+        public boolean hasExecuted(UUID playerId) {
+            boolean executed = executedPlayers.getOrDefault(playerId, false);
+//            Main.instance.getLogger().info("Has executed check for player " + playerId + ": " + executed);
+            return executed;
+        }
+
+        public void markExecuted(UUID playerId) {
+            executedPlayers.put(playerId, true);
+//            Main.instance.getLogger().info("Marked as executed for player " + playerId);
+        }
     }
 }
