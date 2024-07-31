@@ -3,6 +3,7 @@ package com.atlasplugins.atlastime.commands;
 import com.atlasplugins.atlastime.Main;
 import com.atlasplugins.atlastime.commands.user.HelpCommand;
 import com.atlasplugins.atlastime.commands.user.ReloadCommand;
+import com.atlasplugins.atlastime.commands.user.TimeCommand;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -27,6 +28,7 @@ public class CommandRouter implements CommandExecutor, TabCompleter {
         // Register your commands here
         registerCommand(new HelpCommand(main));
         registerCommand(new ReloadCommand(main));
+        registerCommand(new TimeCommand(main));
     }
 
     private void registerCommand(AbstractCommand command) {

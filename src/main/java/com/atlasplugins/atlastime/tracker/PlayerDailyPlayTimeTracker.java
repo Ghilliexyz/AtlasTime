@@ -3,13 +3,9 @@ package com.atlasplugins.atlastime.tracker;
 import com.atlasplugins.atlastime.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
-import org.bukkit.Statistic;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.*;
@@ -81,6 +77,7 @@ public class PlayerDailyPlayTimeTracker implements Listener {
 
                 // Handle the retrieved data
                 if(executed){
+                    if(main.dailyPlayTimeFrames == null) return;
                     if(timeFrameIndex >= 0 && timeFrameIndex < main.dailyPlayTimeFrames.size()){
                         Main.DailyPlayTimeFrames dailyPlayTimeFrames = main.dailyPlayTimeFrames.get(timeFrameIndex);
                         dailyPlayTimeFrames.markExecuted(playerUUID);
@@ -93,80 +90,87 @@ public class PlayerDailyPlayTimeTracker implements Listener {
     }
 
     public void checkAllPlayersPlaytime() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            UUID playerId = player.getUniqueId();
+        boolean enableDailyRewards = main.getSettingsConfig().getBoolean("Time-Trackers.DailyPlayTime-Tracker");
+        if(enableDailyRewards) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                UUID playerId = player.getUniqueId();
 
-            UpdatePlayerTimer(player);
+                UpdatePlayerTimer(player);
 
-            // Retrieve playtime ticks from the database
-            long playtimeTicks = getPlaytimeTicksFromDatabase(playerId);
+                // Retrieve playtime ticks from the database
+                long playtimeTicks = getPlaytimeTicksFromDatabase(playerId);
 
-            // Convert playtimeTicks to seconds
-            int playtimeSeconds = (int) (playtimeTicks / 20);
+                // Convert playtimeTicks to seconds
+                int playtimeSeconds = (int) (playtimeTicks / 20);
 
-            String playtimeDaily = getPlayTime(player); // Your existing method to format playtime
+                String playtimeDaily = getPlayTime(player); // Your existing method to format playtime
 
-            List<Main.DailyPlayTimeFrames> dailyPlayTimeFrames = main.getDailyPlayTimeFrames();
-            int timeFrameIndex = 0;
+                List<Main.DailyPlayTimeFrames> dailyPlayTimeFrames = main.getDailyPlayTimeFrames();
+                int timeFrameIndex = 0;
 
-            for (Main.DailyPlayTimeFrames timeFrames : dailyPlayTimeFrames) {
-                main.getLogger().info("----------------Daily--------------------------");
-                main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
-                main.getLogger().info("Player playtime: " + playtimeSeconds + " Seconds, Threshold: " + timeFrames.getDailyPlaytimeThreshold());
-                main.getLogger().info("hasExecuted: " + timeFrames.hasExecuted(playerId));
+                for (Main.DailyPlayTimeFrames timeFrames : dailyPlayTimeFrames) {
+                    main.getLogger().info("----------------Daily--------------------------");
+                    main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
+                    main.getLogger().info("Player playtime: " + playtimeSeconds + " Seconds, Threshold: " + timeFrames.getDailyPlaytimeThreshold());
+                    main.getLogger().info("hasExecuted: " + timeFrames.hasExecuted(playerId));
 
-                if (playtimeSeconds >= timeFrames.getDailyPlaytimeThreshold() && !timeFrames.hasExecuted(playerId)) {
+                    if (playtimeSeconds >= timeFrames.getDailyPlaytimeThreshold() && !timeFrames.hasExecuted(playerId)) {
 //                    main.getLogger().info("Threshold met for TimeFrame " + (timeFrameIndex + 1) + ". Executing commands.");
 //                    main.getLogger().info("Commands:" + timeFrame.getCommands());
 
-                    for (String command : timeFrames.getCommands()) {
-                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("{playerName}", player.getName()));
-                        main.getLogger().info("----------------Daily--------------------------");
-                        main.getLogger().info("Commands-" + timeFrameIndex + ": " + command);
+                        for (String command : timeFrames.getCommands()) {
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("{playerName}", player.getName()));
+                            main.getLogger().info("----------------Daily--------------------------");
+                            main.getLogger().info("Commands-" + timeFrameIndex + ": " + command);
 //                        main.getLogger().info("Executed command for player " + player.getName() + ": " + command);
-                    }
-
-                    // Message
-                    boolean timeCompletedMessageEnabled = main.getDailyPlayTimeConfig().isBoolean("DailyPlayTime-Frames.DailyPlayTime-Frame-" + (timeFrameIndex + 1) + ".DailyPlayTime-Frame-Completed-Message-Toggle");
-                    if (timeCompletedMessageEnabled) {
-                        for (String timeCompletedMessage : main.getDailyPlayTimeConfig().getStringList("DailyPlayTime-Frames.DailyPlayTime-Frame-" + (timeFrameIndex + 1) + ".DailyPlayTime-Frame-Completed-Message")) {
-                            String withPAPISet = main.setPlaceholders(player, timeCompletedMessage);
-                            player.sendMessage(Main.color(withPAPISet)
-                                    .replace("{playerName}", player.getName())
-                                    .replace("{playerDailyPlayTime}", playtimeDaily));
                         }
+
+                        // Message
+                        boolean timeCompletedMessageEnabled = main.getDailyPlayTimeConfig().isBoolean("DailyPlayTime-Frames.DailyPlayTime-Frame-" + (timeFrameIndex + 1) + ".DailyPlayTime-Frame-Completed-Message-Toggle");
+                        if (timeCompletedMessageEnabled) {
+                            for (String timeCompletedMessage : main.getDailyPlayTimeConfig().getStringList("DailyPlayTime-Frames.DailyPlayTime-Frame-" + (timeFrameIndex + 1) + ".DailyPlayTime-Frame-Completed-Message")) {
+                                String withPAPISet = main.setPlaceholders(player, timeCompletedMessage);
+                                player.sendMessage(Main.color(withPAPISet)
+                                        .replace("{playerName}", player.getName())
+                                        .replace("{playerDailyPlayTime}", playtimeDaily));
+                            }
+                        }
+
+                        // Sound
+                        Sound timeCompletedSound = Sound.valueOf(main.getSettingsConfig().getString("TimeSounds.Time-Completed-Sound"));
+                        float timeCompletedVolume = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Volume");
+                        float timeCompletedPitch = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Pitch");
+
+                        boolean isCompletedSoundEnabled = main.getSettingsConfig().getBoolean("TimeSounds.Time-Completed-Sound-Toggle");
+                        if (isCompletedSoundEnabled) {
+                            player.playSound(player.getLocation(), timeCompletedSound, timeCompletedVolume, timeCompletedPitch);
+                        }
+
+                        // Mark as executed and save in database
+                        timeFrames.markExecuted(playerId);
+                        saveExecutionStatus(playerId, playtimeTicks, timeFrameIndex, true);
                     }
-
-                    // Sound
-                    Sound timeCompletedSound = Sound.valueOf(main.getSettingsConfig().getString("TimeSounds.Time-Completed-Sound"));
-                    float timeCompletedVolume = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Volume");
-                    float timeCompletedPitch = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Pitch");
-
-                    boolean isCompletedSoundEnabled = main.getSettingsConfig().getBoolean("TimeSounds.Time-Completed-Sound-Toggle");
-                    if (isCompletedSoundEnabled) {
-                        player.playSound(player.getLocation(), timeCompletedSound, timeCompletedVolume, timeCompletedPitch);
-                    }
-
-                    // Mark as executed and save in database
-                    timeFrames.markExecuted(playerId);
-                    saveExecutionStatus(playerId, playtimeTicks, timeFrameIndex, true);
+                    timeFrameIndex++;
                 }
-                timeFrameIndex++;
             }
         }
     }
 
     private long getPlaytimeTicksFromDatabase(UUID playerId) {
+        String selectSQL = "SELECT playtime_ticks FROM player_data WHERE uuid = ?";
         String querySQL = "SELECT playtime_ticks FROM player_data WHERE uuid = ? AND date = ?";
         long playtimeTicks = 0;
 
-        try (PreparedStatement pstmt = connection.prepareStatement(querySQL)) {
-            pstmt.setString(1, playerId.toString());
-            pstmt.setDate(2, new java.sql.Date(System.currentTimeMillis())); // Use current date for daily records
+        main.getLogger().warning("start playtimeTicks: " + playtimeTicks);
 
-            try (ResultSet rs = pstmt.executeQuery()) {
+        try (PreparedStatement selectPstmt = connection.prepareStatement(selectSQL)) {
+            selectPstmt.setString(1, playerId.toString());
+            try (ResultSet rs = selectPstmt.executeQuery()) {
                 if (rs.next()) {
                     playtimeTicks = rs.getLong("playtime_ticks");
+                    main.getLogger().warning("get playtimeTicks: " + playtimeTicks);
+                } else {
+                    main.getLogger().warning("No results found for player " + playerId);
                 }
             }
         } catch (SQLException e) {
@@ -174,17 +178,21 @@ public class PlayerDailyPlayTimeTracker implements Listener {
             e.printStackTrace();
         }
 
+        main.getLogger().warning("return playtimeTicks: " + playtimeTicks);
         return playtimeTicks;
     }
 
     public void loadConfiguration() {
+        // Initialize timeFrames list
         main.dailyPlayTimeFrames = new ArrayList<>();
         FileConfiguration config = main.getDailyPlayTimeConfig();
         int timeFrameIndex = 1;
 
+        // Loop through each time frame in the config
         while (config.contains("DailyPlayTime-Frames.DailyPlayTime-Frame-" + timeFrameIndex)) {
             String timeFrameKey = "DailyPlayTime-Frames.DailyPlayTime-Frame-" + timeFrameIndex;
 
+            // Read the time frame components
             long weeks = config.getLong(timeFrameKey + ".DailyPlayTime-Frame-Weeks");
             long days = config.getLong(timeFrameKey + ".DailyPlayTime-Frame-Days");
             long hours = config.getLong(timeFrameKey + ".DailyPlayTime-Frame-Hours");
@@ -195,12 +203,14 @@ public class PlayerDailyPlayTimeTracker implements Listener {
 
             List<String> commands = config.getStringList(timeFrameKey + ".DailyPlayTime-Frame-Commands");
 
+            // Debugging: print the total threshold
+            // Create the TimeFrame object and add it to the list
             Main.DailyPlayTimeFrames dailyPlayTimeFrames = new Main.DailyPlayTimeFrames(threshold, commands);
             main.dailyPlayTimeFrames.add(dailyPlayTimeFrames);
 
-//            main.getLogger().info("----------------Daily--------------------------");
-//            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
-//            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
+            main.getLogger().info("----------------Daily--------------------------");
+            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
+            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
 
             timeFrameIndex++;
         }
@@ -308,7 +318,7 @@ public class PlayerDailyPlayTimeTracker implements Listener {
     }
 
     public String getPlayTime(Player p) {
-        int ticks = p.getStatistic(Statistic.PLAY_ONE_MINUTE);
+        int ticks = (int) getPlaytimeTicksFromDatabase(p.getUniqueId());
         int seconds = ticks / 20;
         int minutes = seconds / 60;
         int hours = minutes / 60;

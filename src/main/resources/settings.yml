@@ -64,6 +64,12 @@ TimeSounds:
   #The pitch the sound plays at when the Time is completed.
   Time-Completed-Pitch: 0.1
 
+Time-Trackers:
+  #if true then the TotalPlayTime frames will work and all commands/messages will be sent.
+  TotalPlayTime-Tracker: true
+  #if true then the DailyPlayTime frames will work and all commands/messages will be sent.
+  DailyPlayTime-Tracker: true
+
 Time-Checker:
   #The amount of time it will check each player if they have passed the time frames listed below.
   #for example: (5 = 5 minutes) so every 5 minutes it will look through the database to see
@@ -78,3 +84,12 @@ Time-Checker:
     - "&e%d &7hours "
     - "&e%d &7min "
     - "&e%d &7sec "
+
+Time-Command:
+  Time-Command-Message:
+    - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
+    - ""
+    - "&c● &7Your Total Time: {playerTotalPlayTime}"
+    - "&c● &7Your Daily Time: {playerDailyPlayTime}"
+    - ""
+    - "&c&m&l-----------------------------------------"

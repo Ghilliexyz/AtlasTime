@@ -23,3 +23,6 @@ permissions:
   atlastime.reloadconfig:
     description: Permission needed to use the reload command.
     default: false
+  atlastime.time:
+    description: Permission needed to use the time command.
+    default: false

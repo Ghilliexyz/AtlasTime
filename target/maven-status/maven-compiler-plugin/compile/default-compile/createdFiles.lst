@@ -19,5 +19,6 @@ com\atlasplugins\atlastime\Metrics$SingleLineChart.class
 com\atlasplugins\atlastime\Main.class
 com\atlasplugins\atlastime\Metrics$AdvancedPie.class
 com\atlasplugins\atlastime\Metrics$JsonObjectBuilder.class
+com\atlasplugins\atlastime\commands\user\TimeCommand.class
 com\atlasplugins\atlastime\listeners\onPlayerEvent.class
 com\atlasplugins\atlastime\commands\AbstractCommand.class

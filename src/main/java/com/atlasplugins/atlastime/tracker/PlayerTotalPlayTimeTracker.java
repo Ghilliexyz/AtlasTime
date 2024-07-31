@@ -74,6 +74,7 @@ public class PlayerTotalPlayTimeTracker {
                 boolean executed = rs.getBoolean("executed");
 
                 if (executed) {
+                    if(main.totalPlayTimeFrames == null) return;
                     if (timeFrameIndex >= 0 && timeFrameIndex < main.totalPlayTimeFrames.size()) {
                         Main.TotalPlayTimeFrames totalPlayTimeFrames = main.totalPlayTimeFrames.get(timeFrameIndex);
                         totalPlayTimeFrames.markExecuted(playerUUID); // Load into memory
@@ -86,62 +87,65 @@ public class PlayerTotalPlayTimeTracker {
     }
 
     public void checkAllPlayersPlaytime() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            UUID playerId = player.getUniqueId();
-            int playtimeSeconds = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20; // convert ticks to seconds
-            int playtimeMinutes = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60); // convert ticks to minutes
-            int playtimeHours = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60); // convert ticks to hours
-            int playtimeDays = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60 * 24); // convert ticks to days
-            int playtimeWeeks = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60 * 24 * 7); // convert ticks to weeks
+        boolean enableTotalRewards = main.getSettingsConfig().getBoolean("Time-Trackers.TotalPlayTime-Tracker");
+        if(enableTotalRewards) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                UUID playerId = player.getUniqueId();
+                int playtimeSeconds = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20; // convert ticks to seconds
+                int playtimeMinutes = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60); // convert ticks to minutes
+                int playtimeHours = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60); // convert ticks to hours
+                int playtimeDays = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60 * 24); // convert ticks to days
+                int playtimeWeeks = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60 * 24 * 7); // convert ticks to weeks
 
-            String playtimeTotal = getPlayTime(player);
+                String playtimeTotal = getPlayTime(player);
 
-            // Convert time components into a total threshold in seconds
+                // Convert time components into a total threshold in seconds
 //            long threshold = weeks * 604800 + days * 86400 + hours * 3600 + minutes * 60 + seconds;
-            List<Main.TotalPlayTimeFrames> totalPlayTimeFrames = main.getTotalPlayTimeFrames();
-            int timeFrameIndex = 0;
+                List<Main.TotalPlayTimeFrames> totalPlayTimeFrames = main.getTotalPlayTimeFrames();
+                int timeFrameIndex = 0;
 
-            for (Main.TotalPlayTimeFrames TimeFrames : totalPlayTimeFrames) {
+                for (Main.TotalPlayTimeFrames TimeFrames : totalPlayTimeFrames) {
 //                main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
 //                main.getLogger().info("Player playtime: " + playtimeMinutes + " minutes, Threshold: " + TimeFrames.getTotalPlaytimeThreshold());
 //                main.getLogger().info("hasExecuted: " + TimeFrames.hasExecuted(playerId));
 
-                // Debugging: print the total threshold
-                if (playtimeSeconds >= TimeFrames.getTotalPlaytimeThreshold() && !TimeFrames.hasExecuted(playerId)) {
+                    // Debugging: print the total threshold
+                    if (playtimeSeconds >= TimeFrames.getTotalPlaytimeThreshold() && !TimeFrames.hasExecuted(playerId)) {
 //                    main.getLogger().info("Threshold met for TimeFrame " + (timeFrameIndex + 1) + ". Executing commands.");
 //                    main.getLogger().info("Commands:" + timeFrame.getCommands());
 
-                    for (String command : TimeFrames.getCommands()) {
-                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("{playerName}", player.getName()));
+                        for (String command : TimeFrames.getCommands()) {
+                            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("{playerName}", player.getName()));
 //                        main.getLogger().info("Executed command for player " + player.getName() + ": " + command);
-                    }
-
-                    // Message
-                    boolean timeCompletedMessageEnabled = main.getTotalPlayTimeConfig().isBoolean("TotalPlayTime-Frames.TotalPlayTime-Frame-" + (timeFrameIndex + 1) + ".TotalPlayTime-Frame-Completed-Message-Toggle");
-                    if (timeCompletedMessageEnabled) {
-                        for (String timeCompletedMessage : main.getTotalPlayTimeConfig().getStringList("TotalPlayTime-Frames.TotalPlayTime-Frame-" + (timeFrameIndex + 1) + ".TotalPlayTime-Frame-Completed-Message")) {
-                            String withPAPISet = main.setPlaceholders(player, timeCompletedMessage);
-                            player.sendMessage(Main.color(withPAPISet)
-                                    .replace("{playerName}", player.getName())
-                                    .replace("{playerTotalPlayTime}", playtimeTotal));
                         }
+
+                        // Message
+                        boolean timeCompletedMessageEnabled = main.getTotalPlayTimeConfig().isBoolean("TotalPlayTime-Frames.TotalPlayTime-Frame-" + (timeFrameIndex + 1) + ".TotalPlayTime-Frame-Completed-Message-Toggle");
+                        if (timeCompletedMessageEnabled) {
+                            for (String timeCompletedMessage : main.getTotalPlayTimeConfig().getStringList("TotalPlayTime-Frames.TotalPlayTime-Frame-" + (timeFrameIndex + 1) + ".TotalPlayTime-Frame-Completed-Message")) {
+                                String withPAPISet = main.setPlaceholders(player, timeCompletedMessage);
+                                player.sendMessage(Main.color(withPAPISet)
+                                        .replace("{playerName}", player.getName())
+                                        .replace("{playerTotalPlayTime}", playtimeTotal));
+                            }
+                        }
+
+                        // Sound
+                        Sound timeCompletedSound = Sound.valueOf(main.getSettingsConfig().getString("TimeSounds.Time-Completed-Sound"));
+                        float timeCompletedVolume = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Volume");
+                        float timeCompletedPitch = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Pitch");
+
+                        boolean isCompletedSoundEnabled = main.getSettingsConfig().getBoolean("TimeSounds.Time-Completed-Sound-Toggle");
+                        if (isCompletedSoundEnabled) {
+                            player.playSound(player.getLocation(), timeCompletedSound, timeCompletedVolume, timeCompletedPitch);
+                        }
+
+                        // Mark as executed and save in database
+                        TimeFrames.markExecuted(playerId);
+                        saveExecutionStatus(playerId, timeFrameIndex, true);
                     }
-
-                    // Sound
-                    Sound timeCompletedSound = Sound.valueOf(main.getSettingsConfig().getString("TimeSounds.Time-Completed-Sound"));
-                    float timeCompletedVolume = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Volume");
-                    float timeCompletedPitch = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Pitch");
-
-                    boolean isCompletedSoundEnabled = main.getSettingsConfig().getBoolean("TimeSounds.Time-Completed-Sound-Toggle");
-                    if (isCompletedSoundEnabled) {
-                        player.playSound(player.getLocation(), timeCompletedSound, timeCompletedVolume, timeCompletedPitch);
-                    }
-
-                    // Mark as executed and save in database
-                    TimeFrames.markExecuted(playerId);
-                    saveExecutionStatus(playerId, timeFrameIndex, true);
+                    timeFrameIndex++;
                 }
-                timeFrameIndex++;
             }
         }
     }
