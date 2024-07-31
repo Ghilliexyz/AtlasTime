@@ -6,6 +6,7 @@ com\atlasplugins\atlastime\Main$DailyPlayTimeFrames.class
 com\atlasplugins\atlastime\Metrics$DrilldownPie.class
 com\atlasplugins\atlastime\Metrics.class
 com\atlasplugins\atlastime\Metrics$AdvancedBarChart.class
+com\atlasplugins\atlastime\tracker\PlayerDailyPlayTimeTracker$1.class
 com\atlasplugins\atlastime\Metrics$MultiLineChart.class
 com\atlasplugins\atlastime\commands\user\ReloadCommand.class
 com\atlasplugins\atlastime\Metrics$MetricsBase.class

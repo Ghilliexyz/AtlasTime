@@ -70,4 +70,11 @@ Time-Checker:
   #if anyone's playtime has surpassed the time frames.
   Time-Checker-Amount: 5
   # This is how the time format looks for all time-based messages
-  Time-Formatter: "%d years %d months %d weeks %d days %d hours %d min %d sec"
+  Time-Formatter:
+    - "&e%d &7years "
+    - "&e%d &7months "
+    - "&e%d &7weeks "
+    - "&e%d &7days "
+    - "&e%d &7hours "
+    - "&e%d &7min "
+    - "&e%d &7sec "

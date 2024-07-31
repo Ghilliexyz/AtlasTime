@@ -103,17 +103,11 @@ public class PlayerTotalPlayTimeTracker {
 
             for (Main.TotalPlayTimeFrames TimeFrames : totalPlayTimeFrames) {
 //                main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
-//                main.getLogger().info("Player playtime: " + playtimeMinutes + " minutes, Threshold: " + TimeFrames.getPlaytimeThreshold());
+//                main.getLogger().info("Player playtime: " + playtimeMinutes + " minutes, Threshold: " + TimeFrames.getTotalPlaytimeThreshold());
 //                main.getLogger().info("hasExecuted: " + TimeFrames.hasExecuted(playerId));
 
-                if(player.getStatistic(Statistic.PLAY_ONE_MINUTE) < TimeFrames.getPlaytimeThreshold())
-                {
-                    saveExecutionStatus(playerId, timeFrameIndex, false);
-                }
-
-
                 // Debugging: print the total threshold
-                if (playtimeSeconds >= TimeFrames.getPlaytimeThreshold() && !TimeFrames.hasExecuted(playerId)) {
+                if (playtimeSeconds >= TimeFrames.getTotalPlaytimeThreshold() && !TimeFrames.hasExecuted(playerId)) {
 //                    main.getLogger().info("Threshold met for TimeFrame " + (timeFrameIndex + 1) + ". Executing commands.");
 //                    main.getLogger().info("Commands:" + timeFrame.getCommands());
 
@@ -146,11 +140,7 @@ public class PlayerTotalPlayTimeTracker {
                     // Mark as executed and save in database
                     TimeFrames.markExecuted(playerId);
                     saveExecutionStatus(playerId, timeFrameIndex, true);
-//                    main.getLogger().info("Marked TimeFrame " + (timeFrameIndex + 1) + " as executed for player " + player.getName());
                 }
-//                else {
-//                    main.getLogger().info("Threshold not met or already executed for TimeFrame " + (timeFrameIndex + 1));
-//                }
                 timeFrameIndex++;
             }
         }
@@ -167,11 +157,11 @@ public class PlayerTotalPlayTimeTracker {
             String timeFrameKey = "TotalPlayTime-Frames.TotalPlayTime-Frame-" + timeFrameIndex;
 
             // Read the time frame components
-            long weeks = config.getLong(timeFrameKey + ".Time-Frame-Weeks");
-            long days = config.getLong(timeFrameKey + ".Time-Frame-Days");
-            long hours = config.getLong(timeFrameKey + ".Time-Frame-Hours");
-            long minutes = config.getLong(timeFrameKey + ".Time-Frame-Minutes");
-            long seconds = config.getLong(timeFrameKey + ".Time-Frame-Seconds");
+            long weeks = config.getLong(timeFrameKey + ".TotalPlayTime-Frame-Weeks");
+            long days = config.getLong(timeFrameKey + ".TotalPlayTime-Frame-Days");
+            long hours = config.getLong(timeFrameKey + ".TotalPlayTime-Frame-Hours");
+            long minutes = config.getLong(timeFrameKey + ".TotalPlayTime-Frame-Minutes");
+            long seconds = config.getLong(timeFrameKey + ".TotalPlayTime-Frame-Seconds");
 
             // Convert time components into a total threshold in seconds
             long threshold = weeks * 604800 + days * 86400 + hours * 3600 + minutes * 60 + seconds;
@@ -184,9 +174,9 @@ public class PlayerTotalPlayTimeTracker {
             Main.TotalPlayTimeFrames totalPlayTimeFrames = new Main.TotalPlayTimeFrames(threshold, commands);
             main.totalPlayTimeFrames.add(totalPlayTimeFrames);
 
-//            main.getLogger().info("------------------------------------------------");
-//            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
-//            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
+            main.getLogger().info("----------------Total--------------------------");
+            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
+            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
 
             timeFrameIndex++;
         }
@@ -202,6 +192,11 @@ public class PlayerTotalPlayTimeTracker {
         }
     }
 
+    private List<String> timeFormats;
+
+    public List<String> getTimeFormats() {
+        return timeFormats;
+    }
 
     public String getPlayTime(Player p) {
         // Calculator for time since last death.
@@ -225,34 +220,38 @@ public class PlayerTotalPlayTimeTracker {
         // Recalculate days to exclude complete weeks
         days = days % 7;
 
+        timeFormats = main.getSettingsConfig().getStringList("Time-Checker.Time-Formatter");
+
+        // Get format strings from TimeFormatter
+        List<String> formats = getTimeFormats();
+
         // StringBuilder to build the dynamic format string
         StringBuilder timeString = new StringBuilder();
-        String timeFormat = main.getSettingsConfig().getString("Time-Checker.Time-Formatter");
 
-        // Reformat the ticks into timer.
-        if (years > 0) {
-            timeString.append(String.format("%d years ", years));
+        // Format each time component if it exists in the formats list
+        if (years > 0 && formats.size() > 0) {
+            timeString.append(String.format(formats.get(0), years));
         }
-        if (months > 0) {
-            timeString.append(String.format("%d months ", months));
+        if (months > 0 && formats.size() > 1) {
+            timeString.append(String.format(formats.get(1), months));
         }
-        if (weeks > 0) {
-            timeString.append(String.format("%d weeks ", weeks));
+        if (weeks > 0 && formats.size() > 2) {
+            timeString.append(String.format(formats.get(2), weeks));
         }
-        if (days > 0) {
-            timeString.append(String.format("%d days ", days));
+        if (days > 0 && formats.size() > 3) {
+            timeString.append(String.format(formats.get(3), days));
         }
-        if (hours % 24 > 0) {
-            timeString.append(String.format("%d hours ", hours % 24));
+        if (hours % 24 > 0 && formats.size() > 4) {
+            timeString.append(String.format(formats.get(4), hours % 24));
         }
-        if (minutes % 60 > 0) {
-            timeString.append(String.format("%d min ", minutes % 60));
+        if (minutes % 60 > 0 && formats.size() > 5) {
+            timeString.append(String.format(formats.get(5), minutes % 60));
         }
-        if (seconds % 60 > 0) {
-            timeString.append(String.format("%d sec", seconds % 60));
+        if (seconds % 60 > 0 && formats.size() > 6) {
+            timeString.append(String.format(formats.get(6), seconds % 60));
         }
 
         // Remove trailing space if any
-        return timeString.toString().trim();
+        return Main.color(timeString.toString().trim());
     }
 }

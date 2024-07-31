@@ -83,7 +83,7 @@ public final class Main extends JavaPlugin {
         getCommand("atlastime").setTabCompleter(commandRouter);
 
         // Register events
-        getServer().getPluginManager().registerEvents(new onPlayerEvent(this), this);
+        getServer().getPluginManager().registerEvents(new onPlayerEvent(this, playerDailyPlayTimeTracker), this);
 
         long autoCheckPlayerTime = getSettingsConfig().getLong("Time-Checker.Time-Checker-Amount");
 
@@ -107,6 +107,8 @@ public final class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        getPlayerTotalPlayTimeTracker().closeConnection();
+        getPlayerDailyPlayTimeTracker().closeConnection();
 
         // Plugin Shutdown Message
         Bukkit.getConsoleSender().sendMessage(color("&4---------------------"));
@@ -213,18 +215,18 @@ public final class Main extends JavaPlugin {
     }
 
     public static class TotalPlayTimeFrames {
-        private final long playtimeThreshold;
+        private final long totalPlaytimeThreshold;
         private final List<String> commands;
         private final Map<UUID, Boolean> executedPlayers;
 
         public TotalPlayTimeFrames(long playtimeThreshold, List<String> commands) {
-            this.playtimeThreshold = playtimeThreshold;
+            this.totalPlaytimeThreshold = playtimeThreshold;
             this.commands = commands;
             this.executedPlayers = new HashMap<>();
         }
 
-        public long getPlaytimeThreshold() {
-            return playtimeThreshold;
+        public long getTotalPlaytimeThreshold() {
+            return totalPlaytimeThreshold;
         }
 
         public List<String> getCommands() {
@@ -244,18 +246,18 @@ public final class Main extends JavaPlugin {
     }
 
     public static class DailyPlayTimeFrames {
-        private final long playtimeThreshold;
+        private final long dailyPlaytimeThreshold;
         private final List<String> commands;
         private final Map<UUID, Boolean> executedPlayers;
 
         public DailyPlayTimeFrames(long playtimeThreshold, List<String> commands) {
-            this.playtimeThreshold = playtimeThreshold;
+            this.dailyPlaytimeThreshold = playtimeThreshold;
             this.commands = commands;
             this.executedPlayers = new HashMap<>();
         }
 
-        public long getPlaytimeThreshold() {
-            return playtimeThreshold;
+        public long getDailyPlaytimeThreshold() {
+            return dailyPlaytimeThreshold;
         }
 
         public List<String> getCommands() {

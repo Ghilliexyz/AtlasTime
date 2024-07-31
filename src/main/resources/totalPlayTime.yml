@@ -27,6 +27,7 @@ TotalPlayTime-Frames:
     #NOTE: This will run as a server command, make sure to do {playerName} if you want to get the exact player.
     TotalPlayTime-Frame-Commands:
       - "say Congrats {playerName}! for completing the 30 second mark!"
+      - "give {playerName} cookie 1"
     #If this is true then the Completed Message will send.
     TotalPlayTime-Frame-Completed-Message-Toggle: true
     #The message that will be sent when the Time frame is completed.
@@ -34,7 +35,7 @@ TotalPlayTime-Frames:
       - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
       -  ""
       -  "&c● &7Well done &e{playerName} &7on Completing the &e30 Second &7mark!"
-      -  "&c● &7Your total playtime: &e{playerTotalPlayTime}"
+      -  "&c● &7Your total playtime: {playerTotalPlayTime}"
       -  ""
       -  "&c&m&l-----------------------------------------"
   TotalPlayTime-Frame-2:
@@ -55,6 +56,6 @@ TotalPlayTime-Frames:
       - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
       -  ""
       -  "&c● &7Well done &e{playerName} &7on Completing the &e1 Day &7mark!"
-      -  "&c● &7Your total playtime: &e{playerTotalPlayTime}"
+      -  "&c● &7Your total playtime: {playerTotalPlayTime}"
       -  ""
       -  "&c&m&l-----------------------------------------"

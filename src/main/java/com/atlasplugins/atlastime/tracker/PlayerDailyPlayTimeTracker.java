@@ -6,31 +6,34 @@ import org.bukkit.Sound;
 import org.bukkit.Statistic;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
-public class PlayerDailyPlayTimeTracker {
+public class PlayerDailyPlayTimeTracker implements Listener {
     private Main main;
     private Connection connection;
+    private Map<UUID, Long> playerLoginTimes = new HashMap<>();
 
     public PlayerDailyPlayTimeTracker(Main main) {
         this.main = main;
         try {
             openConnection();
             createTable();
+            loadExecutionStatus();
+            scheduleDailyReset();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    /**
-     * Opens a connection to the SQLite database.
-     *
-     * @throws SQLException If a database access error occurs.
-     */
     private void openConnection() throws SQLException {
         if (connection != null && !connection.isClosed()) {
             return;
@@ -38,45 +41,49 @@ public class PlayerDailyPlayTimeTracker {
         connection = DriverManager.getConnection("jdbc:sqlite:" + main.getDataFolder() + "/DailyPlayTime.db");
     }
 
-    /**
-     * Creates the player data table if it does not exist.
-     *
-     * @throws SQLException If a database access error occurs.
-     */
     private void createTable() throws SQLException {
-        String createTableSQL = "CREATE TABLE IF NOT EXISTS execution_status (uuid TEXT, time_frame_index INTEGER, executed BOOLEAN, PRIMARY KEY (uuid, time_frame_index))";
+        String createTableSQL = "CREATE TABLE IF NOT EXISTS player_data (" +
+                "uuid TEXT PRIMARY KEY, " +
+                "date DATE, " +
+                "playtime_ticks INTEGER, " +
+                "time_frame_index INTEGER, " +
+                "executed BOOLEAN)";
         try (PreparedStatement pstmt = connection.prepareStatement(createTableSQL)) {
             pstmt.executeUpdate();
         }
     }
 
-    public void saveExecutionStatus(UUID playerId, int timeFrameIndex, boolean executed) {
-        String insertOrUpdateSQL = "INSERT OR REPLACE INTO execution_status (uuid, time_frame_index, executed) VALUES (?, ?, ?)";
+    public void saveExecutionStatus(UUID playerId, long playtimeTodayTicks, int timeFrameIndex, boolean executed) {
+        String insertOrUpdateSQL = "INSERT OR REPLACE INTO player_data (uuid, date, playtime_ticks, time_frame_index, executed) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(insertOrUpdateSQL)) {
             pstmt.setString(1, playerId.toString());
-            pstmt.setInt(2, timeFrameIndex);
-            pstmt.setBoolean(3, executed);
-            pstmt.executeUpdate(); // No need for manual commit
-//            main.getLogger().info("Saving execution status: PlayerID=" + playerId + ", TimeFrameIndex=" + timeFrameIndex + ", Executed=" + executed);
+            pstmt.setDate(2, new java.sql.Date(System.currentTimeMillis())); // Store current date
+            pstmt.setLong(3, playtimeTodayTicks);
+            pstmt.setInt(4, timeFrameIndex);
+            pstmt.setBoolean(5, executed);
+            pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     public void loadExecutionStatus() {
-        String selectSQL = "SELECT * FROM execution_status";
+        String selectSQL = "SELECT * FROM player_data";
         try (PreparedStatement pstmt = connection.prepareStatement(selectSQL);
              ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
                 UUID playerUUID = UUID.fromString(rs.getString("uuid"));
+                Date date = rs.getDate("date");
+                long playtimeTicks = rs.getLong("playtime_ticks");
                 int timeFrameIndex = rs.getInt("time_frame_index");
                 boolean executed = rs.getBoolean("executed");
 
-                if (executed) {
-                    if (timeFrameIndex >= 0 && timeFrameIndex < main.dailyPlayTimeFrames.size()) {
+                // Handle the retrieved data
+                if(executed){
+                    if(timeFrameIndex >= 0 && timeFrameIndex < main.dailyPlayTimeFrames.size()){
                         Main.DailyPlayTimeFrames dailyPlayTimeFrames = main.dailyPlayTimeFrames.get(timeFrameIndex);
-                        dailyPlayTimeFrames.markExecuted(playerUUID); // Load into memory
+                        dailyPlayTimeFrames.markExecuted(playerUUID);
                     }
                 }
             }
@@ -88,37 +95,31 @@ public class PlayerDailyPlayTimeTracker {
     public void checkAllPlayersPlaytime() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID playerId = player.getUniqueId();
-            int playtimeSeconds = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20; // convert ticks to seconds
-            int playtimeMinutes = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60); // convert ticks to minutes
-            int playtimeHours = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60); // convert ticks to hours
-            int playtimeDays = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60 * 24); // convert ticks to days
-            int playtimeWeeks = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60 * 24 * 7); // convert ticks to weeks
 
-            String playtimeDaily = getPlayTime(player);
+            // Retrieve playtime ticks from the database
+            long playtimeTicks = getPlaytimeTicksFromDatabase(playerId);
 
-            // Convert time components into a daily threshold in seconds
-//            long threshold = weeks * 604800 + days * 86400 + hours * 3600 + minutes * 60 + seconds;
+            // Convert playtimeTicks to seconds
+            int playtimeSeconds = (int) (playtimeTicks / 20);
+
+            String playtimeDaily = getPlayTime(player); // Your existing method to format playtime
+
             List<Main.DailyPlayTimeFrames> dailyPlayTimeFrames = main.getDailyPlayTimeFrames();
             int timeFrameIndex = 0;
 
-            for (Main.DailyPlayTimeFrames TimeFrames : dailyPlayTimeFrames) {
-//                main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
-//                main.getLogger().info("Player playtime: " + playtimeMinutes + " minutes, Threshold: " + TimeFrames.getPlaytimeThreshold());
-//                main.getLogger().info("hasExecuted: " + TimeFrames.hasExecuted(playerId));
+            for (Main.DailyPlayTimeFrames timeFrames : dailyPlayTimeFrames) {
+                main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
+                main.getLogger().info("Player playtime: " + playtimeSeconds + " Seconds, Threshold: " + timeFrames.getDailyPlaytimeThreshold());
+                main.getLogger().info("hasExecuted: " + timeFrames.hasExecuted(playerId));
 
-                if(player.getStatistic(Statistic.PLAY_ONE_MINUTE) < TimeFrames.getPlaytimeThreshold())
-                {
-                    saveExecutionStatus(playerId, timeFrameIndex, false);
-                }
-
-
-                // Debugging: print the daily threshold
-                if (playtimeSeconds >= TimeFrames.getPlaytimeThreshold() && !TimeFrames.hasExecuted(playerId)) {
+                if (playtimeSeconds >= timeFrames.getDailyPlaytimeThreshold() && !timeFrames.hasExecuted(playerId)) {
 //                    main.getLogger().info("Threshold met for TimeFrame " + (timeFrameIndex + 1) + ". Executing commands.");
 //                    main.getLogger().info("Commands:" + timeFrame.getCommands());
 
-                    for (String command : TimeFrames.getCommands()) {
+                    for (String command : timeFrames.getCommands()) {
                         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("{playerName}", player.getName()));
+                        main.getLogger().info("----------------Daily--------------------------");
+                        main.getLogger().info("Commands-" + timeFrameIndex + ": " + command);
 //                        main.getLogger().info("Executed command for player " + player.getName() + ": " + command);
                     }
 
@@ -144,52 +145,140 @@ public class PlayerDailyPlayTimeTracker {
                     }
 
                     // Mark as executed and save in database
-                    TimeFrames.markExecuted(playerId);
-                    saveExecutionStatus(playerId, timeFrameIndex, true);
-//                    main.getLogger().info("Marked TimeFrame " + (timeFrameIndex + 1) + " as executed for player " + player.getName());
+                    timeFrames.markExecuted(playerId);
+                    saveExecutionStatus(playerId, playtimeTicks, timeFrameIndex, true);
                 }
-//                else {
-//                    main.getLogger().info("Threshold not met or already executed for TimeFrame " + (timeFrameIndex + 1));
-//                }
                 timeFrameIndex++;
             }
         }
     }
 
+    private long getPlaytimeTicksFromDatabase(UUID playerId) {
+        String querySQL = "SELECT playtime_ticks FROM player_data WHERE uuid = ? AND date = ?";
+        long playtimeTicks = 0;
+
+        try (PreparedStatement pstmt = connection.prepareStatement(querySQL)) {
+            pstmt.setString(1, playerId.toString());
+            pstmt.setDate(2, new java.sql.Date(System.currentTimeMillis())); // Use current date for daily records
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    playtimeTicks = rs.getLong("playtime_ticks");
+                }
+            }
+        } catch (SQLException e) {
+            main.getLogger().severe("Failed to retrieve playtime for player " + playerId + ": " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return playtimeTicks;
+    }
+
     public void loadConfiguration() {
-        // Initialize timeFrames list
         main.dailyPlayTimeFrames = new ArrayList<>();
         FileConfiguration config = main.getDailyPlayTimeConfig();
         int timeFrameIndex = 1;
 
-        // Loop through each time frame in the config
         while (config.contains("DailyPlayTime-Frames.DailyPlayTime-Frame-" + timeFrameIndex)) {
             String timeFrameKey = "DailyPlayTime-Frames.DailyPlayTime-Frame-" + timeFrameIndex;
 
-            // Read the time frame components
-            long weeks = config.getLong(timeFrameKey + ".Time-Frame-Weeks");
-            long days = config.getLong(timeFrameKey + ".Time-Frame-Days");
-            long hours = config.getLong(timeFrameKey + ".Time-Frame-Hours");
-            long minutes = config.getLong(timeFrameKey + ".Time-Frame-Minutes");
-            long seconds = config.getLong(timeFrameKey + ".Time-Frame-Seconds");
+            long weeks = config.getLong(timeFrameKey + ".DailyPlayTime-Frame-Weeks");
+            long days = config.getLong(timeFrameKey + ".DailyPlayTime-Frame-Days");
+            long hours = config.getLong(timeFrameKey + ".DailyPlayTime-Frame-Hours");
+            long minutes = config.getLong(timeFrameKey + ".DailyPlayTime-Frame-Minutes");
+            long seconds = config.getLong(timeFrameKey + ".DailyPlayTime-Frame-Seconds");
 
-            // Convert time components into a daily threshold in seconds
             long threshold = weeks * 604800 + days * 86400 + hours * 3600 + minutes * 60 + seconds;
 
-
-            // Get the commands and completed message toggle
             List<String> commands = config.getStringList(timeFrameKey + ".DailyPlayTime-Frame-Commands");
 
-            // Debugging: print the daily threshold
-            // Create the TimeFrame object and add it to the list
             Main.DailyPlayTimeFrames dailyPlayTimeFrames = new Main.DailyPlayTimeFrames(threshold, commands);
             main.dailyPlayTimeFrames.add(dailyPlayTimeFrames);
 
-//            main.getLogger().info("------------------------------------------------");
-//            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
-//            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
+            main.getLogger().info("----------------Daily--------------------------");
+            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
+            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
 
             timeFrameIndex++;
+        }
+    }
+
+    private void scheduleDailyReset() {
+        long initialDelay = calculateDelayToMidnightUTC();
+        long period = TimeUnit.DAYS.toMillis(1);
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                resetDailyPlayTime();
+            }
+        }.runTaskTimer(main, initialDelay / 50, period / 50); // Convert milliseconds to ticks
+    }
+
+    private long calculateDelayToMidnightUTC() {
+        long now = System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        calendar.setTimeInMillis(now);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+
+        long midnight = calendar.getTimeInMillis() + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
+        return midnight - now;
+    }
+
+    private void resetDailyPlayTime() {
+        checkAllPlayersPlaytime();
+    }
+
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent e) {
+        handlePlayerLogin(e.getPlayer());
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent e) {
+        handlePlayerLogout(e.getPlayer());
+    }
+
+    public void handlePlayerLogin(Player player) {
+        playerLoginTimes.put(player.getUniqueId(), System.currentTimeMillis());
+    }
+
+    public void handlePlayerLogout(Player player) {
+        UpdatePlayerTimer(player);
+
+        playerLoginTimes.remove(player.getUniqueId());
+    }
+
+    private void UpdatePlayerTimer(Player player)
+    {
+        UUID playerId = player.getUniqueId();
+
+        // Update the player's total daily playtime in the database
+        updateDailyPlaytime(playerId, getPlayerTime(player));
+    }
+
+    private long getPlayerTime(Player player) {
+        UUID playerId = player.getUniqueId();
+        long loginTime = playerLoginTimes.getOrDefault(playerId, System.currentTimeMillis());
+        long logoutTime = System.currentTimeMillis();
+        return (logoutTime - loginTime) / 50;
+    }
+
+    // Example refined error handling in updateDailyPlaytime method
+    private void updateDailyPlaytime(UUID playerId, long playtimeToday) {
+        long playtimeTodayTicks = playtimeToday * 20; // Convert seconds to ticks
+
+        String updateSQL = "INSERT OR REPLACE INTO player_data (uuid, date, playtime_ticks) VALUES (?, ?, ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(updateSQL)) {
+            pstmt.setString(1, playerId.toString());
+            pstmt.setDate(2, new java.sql.Date(System.currentTimeMillis())); // Consider using Timestamp if time precision is needed
+            pstmt.setLong(3, playtimeTodayTicks);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            main.getLogger().severe("Failed to update playtime for player " + playerId + ": " + e.getMessage());
         }
     }
 
@@ -203,9 +292,13 @@ public class PlayerDailyPlayTimeTracker {
         }
     }
 
+    private List<String> timeFormats;
+
+    public List<String> getTimeFormats() {
+        return timeFormats;
+    }
 
     public String getPlayTime(Player p) {
-        // Calculator for time since last death.
         int ticks = p.getStatistic(Statistic.PLAY_ONE_MINUTE);
         int seconds = ticks / 20;
         int minutes = seconds / 60;
@@ -213,47 +306,38 @@ public class PlayerDailyPlayTimeTracker {
         int days = hours / 24;
         int years = days / 365;
 
-        // Adjust days to exclude complete years
         days = days % 365;
-
-        // Calculate months
         int months = days / 30;
-
-        // Adjust days to exclude complete months and weeks
         days = days % 30;
         int weeks = days / 7;
-
-        // Recalculate days to exclude complete weeks
         days = days % 7;
 
-        // StringBuilder to build the dynamic format string
+        timeFormats = main.getSettingsConfig().getStringList("Time-Checker.Time-Formatter");
+        List<String> formats = getTimeFormats();
         StringBuilder timeString = new StringBuilder();
-        String timeFormat = main.getSettingsConfig().getString("Time-Checker.Time-Formatter");
 
-        // Reformat the ticks into timer.
-        if (years > 0) {
-            timeString.append(String.format("%d years ", years));
+        if (years > 0 && formats.size() > 0) {
+            timeString.append(String.format(formats.get(0), years));
         }
-        if (months > 0) {
-            timeString.append(String.format("%d months ", months));
+        if (months > 0 && formats.size() > 1) {
+            timeString.append(String.format(formats.get(1), months));
         }
-        if (weeks > 0) {
-            timeString.append(String.format("%d weeks ", weeks));
+        if (weeks > 0 && formats.size() > 2) {
+            timeString.append(String.format(formats.get(2), weeks));
         }
-        if (days > 0) {
-            timeString.append(String.format("%d days ", days));
+        if (days > 0 && formats.size() > 3) {
+            timeString.append(String.format(formats.get(3), days));
         }
-        if (hours % 24 > 0) {
-            timeString.append(String.format("%d hours ", hours % 24));
+        if (hours % 24 > 0 && formats.size() > 4) {
+            timeString.append(String.format(formats.get(4), hours % 24));
         }
-        if (minutes % 60 > 0) {
-            timeString.append(String.format("%d min ", minutes % 60));
+        if (minutes % 60 > 0 && formats.size() > 5) {
+            timeString.append(String.format(formats.get(5), minutes % 60));
         }
-        if (seconds % 60 > 0) {
-            timeString.append(String.format("%d sec", seconds % 60));
+        if (seconds % 60 > 0 && formats.size() > 6) {
+            timeString.append(String.format(formats.get(6), seconds % 60));
         }
 
-        // Remove trailing space if any
-        return timeString.toString().trim();
+        return Main.color(timeString.toString().trim());
     }
 }
