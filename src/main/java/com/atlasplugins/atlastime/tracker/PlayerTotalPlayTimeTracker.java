@@ -251,7 +251,7 @@ public class PlayerTotalPlayTimeTracker {
         if (minutes % 60 > 0 && formats.size() > 5) {
             timeString.append(String.format(formats.get(5), minutes % 60));
         }
-        if (seconds % 60 > 0 && formats.size() > 6) {
+        if (seconds % 60 >= 0 && formats.size() > 6) {
             timeString.append(String.format(formats.get(6), seconds % 60));
         }
 

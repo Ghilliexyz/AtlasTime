@@ -17,13 +17,16 @@ public class TimeCommand extends AbstractCommand {
     @Override
     public void execute(JavaPlugin plugin, CommandSender sender, String label, List<String> args) {
         // if all checks, check out then move on to the command
+        Player player = (Player) sender;
+
+        main.getPlayerDailyPlayTimeTracker().UpdatePlayerTimer(player);
 
         // Send ConfigReloaded Message in chat when called.
         for (String ConfigReloadedMessage : main.getSettingsConfig().getStringList("Time-Command.Time-Command-Message")) {
             String withPAPISet = main.setPlaceholders((Player) sender, ConfigReloadedMessage);
             sender.sendMessage(Main.color(withPAPISet)
-                    .replace("{playerTotalPlayTime}", String.valueOf(main.getPlayerTotalPlayTimeTracker().getPlayTime(((Player) sender).getPlayer())))
-                    .replace("{playerDailyPlayTime}", String.valueOf(main.getPlayerDailyPlayTimeTracker().getPlayTime(((Player) sender).getPlayer()))));
+                    .replace("{playerTotalPlayTime}", String.valueOf(main.getPlayerTotalPlayTimeTracker().getPlayTime(player)))
+                    .replace("{playerDailyPlayTime}", String.valueOf(main.getPlayerDailyPlayTimeTracker().getPlayTime(player))));
         }
     }
 

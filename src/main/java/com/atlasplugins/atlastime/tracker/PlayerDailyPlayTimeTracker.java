@@ -109,10 +109,10 @@ public class PlayerDailyPlayTimeTracker implements Listener {
                 int timeFrameIndex = 0;
 
                 for (Main.DailyPlayTimeFrames timeFrames : dailyPlayTimeFrames) {
-                    main.getLogger().info("----------------Daily--------------------------");
-                    main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
-                    main.getLogger().info("Player playtime: " + playtimeSeconds + " Seconds, Threshold: " + timeFrames.getDailyPlaytimeThreshold());
-                    main.getLogger().info("hasExecuted: " + timeFrames.hasExecuted(playerId));
+//                    main.getLogger().info("----------------Daily--------------------------");
+//                    main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
+//                    main.getLogger().info("Player playtime: " + playtimeSeconds + " Seconds, Threshold: " + timeFrames.getDailyPlaytimeThreshold());
+//                    main.getLogger().info("hasExecuted: " + timeFrames.hasExecuted(playerId));
 
                     if (playtimeSeconds >= timeFrames.getDailyPlaytimeThreshold() && !timeFrames.hasExecuted(playerId)) {
 //                    main.getLogger().info("Threshold met for TimeFrame " + (timeFrameIndex + 1) + ". Executing commands.");
@@ -120,8 +120,8 @@ public class PlayerDailyPlayTimeTracker implements Listener {
 
                         for (String command : timeFrames.getCommands()) {
                             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("{playerName}", player.getName()));
-                            main.getLogger().info("----------------Daily--------------------------");
-                            main.getLogger().info("Commands-" + timeFrameIndex + ": " + command);
+//                            main.getLogger().info("----------------Daily--------------------------");
+//                            main.getLogger().info("Commands-" + timeFrameIndex + ": " + command);
 //                        main.getLogger().info("Executed command for player " + player.getName() + ": " + command);
                         }
 
@@ -161,14 +161,14 @@ public class PlayerDailyPlayTimeTracker implements Listener {
         String querySQL = "SELECT playtime_ticks FROM player_data WHERE uuid = ? AND date = ?";
         long playtimeTicks = 0;
 
-        main.getLogger().warning("start playtimeTicks: " + playtimeTicks);
+//        main.getLogger().warning("start playtimeTicks: " + playtimeTicks);
 
         try (PreparedStatement selectPstmt = connection.prepareStatement(selectSQL)) {
             selectPstmt.setString(1, playerId.toString());
             try (ResultSet rs = selectPstmt.executeQuery()) {
                 if (rs.next()) {
                     playtimeTicks = rs.getLong("playtime_ticks");
-                    main.getLogger().warning("get playtimeTicks: " + playtimeTicks);
+//                    main.getLogger().warning("get playtimeTicks: " + playtimeTicks);
                 } else {
                     main.getLogger().warning("No results found for player " + playerId);
                 }
@@ -178,7 +178,7 @@ public class PlayerDailyPlayTimeTracker implements Listener {
             e.printStackTrace();
         }
 
-        main.getLogger().warning("return playtimeTicks: " + playtimeTicks);
+//        main.getLogger().warning("return playtimeTicks: " + playtimeTicks);
         return playtimeTicks;
     }
 
@@ -208,9 +208,9 @@ public class PlayerDailyPlayTimeTracker implements Listener {
             Main.DailyPlayTimeFrames dailyPlayTimeFrames = new Main.DailyPlayTimeFrames(threshold, commands);
             main.dailyPlayTimeFrames.add(dailyPlayTimeFrames);
 
-            main.getLogger().info("----------------Daily--------------------------");
-            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
-            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
+//            main.getLogger().info("----------------Daily--------------------------");
+//            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
+//            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
 
             timeFrameIndex++;
         }
@@ -251,7 +251,6 @@ public class PlayerDailyPlayTimeTracker implements Listener {
 
     public void handlePlayerLogout(Player player) {
         UpdatePlayerTimer(player);
-        playerLoginTimes.remove(player.getUniqueId());
     }
 
     public void UpdatePlayerTimer(Player player)
@@ -272,6 +271,8 @@ public class PlayerDailyPlayTimeTracker implements Listener {
 
     // Example refined error handling in updateDailyPlaytime method
     private void updateDailyPlaytime(UUID playerId, long sessionPlaytimeTicks) {
+        playerLoginTimes.remove(playerId);
+
         String selectSQL = "SELECT playtime_ticks FROM player_data WHERE uuid = ?";
         String updateSQL = "INSERT OR REPLACE INTO player_data (uuid, date, playtime_ticks) VALUES (?, ?, ?)";
 
@@ -299,6 +300,8 @@ public class PlayerDailyPlayTimeTracker implements Listener {
         } catch (SQLException e) {
             main.getLogger().severe("Failed to update playtime for player " + playerId + ": " + e.getMessage());
         }
+
+        playerLoginTimes.put(playerId, System.currentTimeMillis());
     }
 
     public void closeConnection() {
@@ -353,7 +356,7 @@ public class PlayerDailyPlayTimeTracker implements Listener {
         if (minutes % 60 > 0 && formats.size() > 5) {
             timeString.append(String.format(formats.get(5), minutes % 60));
         }
-        if (seconds % 60 > 0 && formats.size() > 6) {
+        if (seconds % 60 >= 0 && formats.size() > 6) {
             timeString.append(String.format(formats.get(6), seconds % 60));
         }
 

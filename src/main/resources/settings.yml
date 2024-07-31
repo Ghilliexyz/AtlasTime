@@ -74,7 +74,7 @@ Time-Checker:
   #The amount of time it will check each player if they have passed the time frames listed below.
   #for example: (5 = 5 minutes) so every 5 minutes it will look through the database to see
   #if anyone's playtime has surpassed the time frames.
-  Time-Checker-Amount: 1
+  Time-Checker-Amount: 5
   # This is how the time format looks for all time-based messages
   Time-Formatter:
     - "&e%d &7years "
