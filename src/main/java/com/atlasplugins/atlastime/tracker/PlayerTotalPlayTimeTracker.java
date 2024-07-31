@@ -174,9 +174,9 @@ public class PlayerTotalPlayTimeTracker {
             Main.TotalPlayTimeFrames totalPlayTimeFrames = new Main.TotalPlayTimeFrames(threshold, commands);
             main.totalPlayTimeFrames.add(totalPlayTimeFrames);
 
-            main.getLogger().info("----------------Total--------------------------");
-            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
-            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
+//            main.getLogger().info("----------------Total--------------------------");
+//            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
+//            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
 
             timeFrameIndex++;
         }

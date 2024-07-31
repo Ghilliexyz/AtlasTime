@@ -96,6 +96,8 @@ public class PlayerDailyPlayTimeTracker implements Listener {
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID playerId = player.getUniqueId();
 
+            UpdatePlayerTimer(player);
+
             // Retrieve playtime ticks from the database
             long playtimeTicks = getPlaytimeTicksFromDatabase(playerId);
 
@@ -108,6 +110,7 @@ public class PlayerDailyPlayTimeTracker implements Listener {
             int timeFrameIndex = 0;
 
             for (Main.DailyPlayTimeFrames timeFrames : dailyPlayTimeFrames) {
+                main.getLogger().info("----------------Daily--------------------------");
                 main.getLogger().info("Checking TimeFrame " + (timeFrameIndex + 1) + " for player " + player.getName());
                 main.getLogger().info("Player playtime: " + playtimeSeconds + " Seconds, Threshold: " + timeFrames.getDailyPlaytimeThreshold());
                 main.getLogger().info("hasExecuted: " + timeFrames.hasExecuted(playerId));
@@ -195,9 +198,9 @@ public class PlayerDailyPlayTimeTracker implements Listener {
             Main.DailyPlayTimeFrames dailyPlayTimeFrames = new Main.DailyPlayTimeFrames(threshold, commands);
             main.dailyPlayTimeFrames.add(dailyPlayTimeFrames);
 
-            main.getLogger().info("----------------Daily--------------------------");
-            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
-            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
+//            main.getLogger().info("----------------Daily--------------------------");
+//            main.getLogger().info("Threshold-" + timeFrameIndex + ": " + threshold);
+//            main.getLogger().info("Commands-" + timeFrameIndex + ": " + commands);
 
             timeFrameIndex++;
         }
@@ -232,51 +235,57 @@ public class PlayerDailyPlayTimeTracker implements Listener {
         checkAllPlayersPlaytime();
     }
 
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent e) {
-        handlePlayerLogin(e.getPlayer());
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent e) {
-        handlePlayerLogout(e.getPlayer());
-    }
-
     public void handlePlayerLogin(Player player) {
         playerLoginTimes.put(player.getUniqueId(), System.currentTimeMillis());
     }
 
     public void handlePlayerLogout(Player player) {
         UpdatePlayerTimer(player);
-
         playerLoginTimes.remove(player.getUniqueId());
     }
 
-    private void UpdatePlayerTimer(Player player)
+    public void UpdatePlayerTimer(Player player)
     {
         UUID playerId = player.getUniqueId();
 
         // Update the player's total daily playtime in the database
-        updateDailyPlaytime(playerId, getPlayerTime(player));
+        long playtimeTicks = getPlayerTime(player);
+        updateDailyPlaytime(playerId, playtimeTicks);
     }
 
     private long getPlayerTime(Player player) {
         UUID playerId = player.getUniqueId();
         long loginTime = playerLoginTimes.getOrDefault(playerId, System.currentTimeMillis());
         long logoutTime = System.currentTimeMillis();
-        return (logoutTime - loginTime) / 50;
+        return (logoutTime - loginTime) / 50; // Convert milliseconds to ticks
     }
 
     // Example refined error handling in updateDailyPlaytime method
-    private void updateDailyPlaytime(UUID playerId, long playtimeToday) {
-        long playtimeTodayTicks = playtimeToday * 20; // Convert seconds to ticks
-
+    private void updateDailyPlaytime(UUID playerId, long sessionPlaytimeTicks) {
+        String selectSQL = "SELECT playtime_ticks FROM player_data WHERE uuid = ?";
         String updateSQL = "INSERT OR REPLACE INTO player_data (uuid, date, playtime_ticks) VALUES (?, ?, ?)";
-        try (PreparedStatement pstmt = connection.prepareStatement(updateSQL)) {
-            pstmt.setString(1, playerId.toString());
-            pstmt.setDate(2, new java.sql.Date(System.currentTimeMillis())); // Consider using Timestamp if time precision is needed
-            pstmt.setLong(3, playtimeTodayTicks);
-            pstmt.executeUpdate();
+
+        try {
+            // Retrieve current total playtime
+            long totalPlaytimeTicks = 0;
+            try (PreparedStatement selectPstmt = connection.prepareStatement(selectSQL)) {
+                selectPstmt.setString(1, playerId.toString());
+                try (ResultSet rs = selectPstmt.executeQuery()) {
+                    if (rs.next()) {
+                        totalPlaytimeTicks = rs.getLong("playtime_ticks");
+                    }
+                }
+            }
+
+            // Update total playtime
+            totalPlaytimeTicks += sessionPlaytimeTicks;
+
+            try (PreparedStatement updatePstmt = connection.prepareStatement(updateSQL)) {
+                updatePstmt.setString(1, playerId.toString());
+                updatePstmt.setTimestamp(2, new Timestamp(System.currentTimeMillis())); // Use Timestamp for more precision
+                updatePstmt.setLong(3, totalPlaytimeTicks);
+                updatePstmt.executeUpdate();
+            }
         } catch (SQLException e) {
             main.getLogger().severe("Failed to update playtime for player " + playerId + ": " + e.getMessage());
         }
