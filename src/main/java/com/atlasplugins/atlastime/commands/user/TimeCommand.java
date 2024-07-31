@@ -21,7 +21,7 @@ public class TimeCommand extends AbstractCommand {
 
         main.getPlayerDailyPlayTimeTracker().UpdatePlayerTimer(player);
 
-        // Send ConfigReloaded Message in chat when called.
+        // Send Time-Command-Message Message in chat when called.
         for (String ConfigReloadedMessage : main.getSettingsConfig().getStringList("Time-Command.Time-Command-Message")) {
             String withPAPISet = main.setPlaceholders((Player) sender, ConfigReloadedMessage);
             sender.sendMessage(Main.color(withPAPISet)

@@ -74,7 +74,7 @@ Time-Checker:
   #The amount of time it will check each player if they have passed the time frames listed below.
   #for example: (5 = 5 minutes) so every 5 minutes it will look through the database to see
   #if anyone's playtime has surpassed the time frames.
-  Time-Checker-Amount: 1
+  Time-Checker-Amount: 5
   # This is how the time format looks for all time-based messages
   Time-Formatter:
     - "&e%d &7years "
@@ -91,5 +91,14 @@ Time-Command:
     - ""
     - "&c● &7Your Total Time: {playerTotalPlayTime}"
     - "&c● &7Your Daily Time: {playerDailyPlayTime}"
+    - ""
+    - "&c&m&l-----------------------------------------"
+
+TimeDaily-Info:
+  TimeDaily-Message-Toggle: true
+  TimeDaily-Message:
+    - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
+    - ""
+    - "&c● &7Today is a new day!"
     - ""
     - "&c&m&l-----------------------------------------"

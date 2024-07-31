@@ -242,6 +242,14 @@ public class PlayerDailyPlayTimeTracker implements Listener {
     }
 
     private void resetDailyPlayTime() {
+        playerLoginTimes.clear();
+        // Send Time-Command-Message Message in chat when called.
+        if(main.getSettingsConfig().getBoolean("TimeDaily-Info.TimeDaily-Message-Toggle")) {
+            for (String resetDailyPlayTimeMessage : main.getSettingsConfig().getStringList("TimeDaily-Info.TimeDaily-Message")) {
+//            String withPAPISet = main.setPlaceholders((Player) sender, resetDailyPlayTimeMessage);
+                main.getServer().broadcastMessage(Main.color(resetDailyPlayTimeMessage));
+            }
+        }
         checkAllPlayersPlaytime();
     }
 

@@ -107,7 +107,7 @@ public final class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-//        Bukkit.getScheduler().cancelTasks(this);
+        Bukkit.getScheduler().cancelTasks(this);
 
         getPlayerTotalPlayTimeTracker().closeConnection();
         getPlayerDailyPlayTimeTracker().closeConnection();
