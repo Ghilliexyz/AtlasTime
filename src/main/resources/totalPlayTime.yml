@@ -21,12 +21,12 @@ TotalPlayTime-Frames:
     TotalPlayTime-Frame-Weeks: 0
     TotalPlayTime-Frame-Days: 0
     TotalPlayTime-Frame-Hours: 0
-    TotalPlayTime-Frame-Minutes: 0
-    TotalPlayTime-Frame-Seconds: 5
+    TotalPlayTime-Frame-Minutes: 25
+    TotalPlayTime-Frame-Seconds: 0
     #The Commands that will run once a player reaches the time frame.
     #NOTE: This will run as a server command, make sure to do {playerName} if you want to get the exact player.
     TotalPlayTime-Frame-Commands:
-      - "say Congrats {playerName}! for completing the 30 second mark!"
+      - "say Congrats {playerName}! for completing the 25 Minute mark!"
       - "give {playerName} cookie 1"
     #If this is true then the Completed Message will send.
     TotalPlayTime-Frame-Completed-Message-Toggle: true
@@ -40,10 +40,10 @@ TotalPlayTime-Frames:
       -  "&c&m&l-----------------------------------------"
   TotalPlayTime-Frame-2:
     TotalPlayTime-Frame-Weeks: 0
-    TotalPlayTime-Frame-Days: 0
+    TotalPlayTime-Frame-Days: 1
     TotalPlayTime-Frame-Hours: 0
     TotalPlayTime-Frame-Minutes: 0
-    TotalPlayTime-Frame-Seconds: 10
+    TotalPlayTime-Frame-Seconds: 0
     # The Commands that will run once a player reaches the time frame.
     # NOTE: This will run as a server command, make sure to do {playerName} if you want to get the exact player.
     TotalPlayTime-Frame-Commands:

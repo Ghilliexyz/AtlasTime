@@ -21,8 +21,8 @@ DailyPlayTime-Frames:
     DailyPlayTime-Frame-Weeks: 0
     DailyPlayTime-Frame-Days: 0
     DailyPlayTime-Frame-Hours: 0
-    DailyPlayTime-Frame-Minutes: 0
-    DailyPlayTime-Frame-Seconds: 5
+    DailyPlayTime-Frame-Minutes: 25
+    DailyPlayTime-Frame-Seconds: 0
     #The Commands that will run once a player reaches the time frame.
     #NOTE: This will run as a server command, make sure to do {playerName} if you want to get the exact player.
     DailyPlayTime-Frame-Commands:
@@ -34,16 +34,16 @@ DailyPlayTime-Frames:
     DailyPlayTime-Frame-Completed-Message:
       - "&c&m&l--------------&f&l [&x&F&F&3&C&3&C&lA&x&F&F&5&4&3&F&lT&x&F&E&6&C&4&2&lL&x&F&E&8&4&4&5&lA&x&F&D&9&C&4&8&lS &x&F&D&B&3&4&B&lT&x&F&C&C&B&4&E&lI&x&F&C&E&3&5&1&lM&x&F&B&F&B&5&4&lE&f&l] &c&m&l---------------"
       -  ""
-      -  "&c● &7Well done &e{playerName} &7on Completing the &e30 Second &7mark!"
+      -  "&c● &7Well done &e{playerName} &7on Completing the &e25 Minute &7mark!"
       -  "&c● &7Your daily playtime: {playerDailyPlayTime}"
       -  ""
       -  "&c&m&l-----------------------------------------"
   DailyPlayTime-Frame-2:
     DailyPlayTime-Frame-Weeks: 0
     DailyPlayTime-Frame-Days: 0
-    DailyPlayTime-Frame-Hours: 0
+    DailyPlayTime-Frame-Hours: 6
     DailyPlayTime-Frame-Minutes: 0
-    DailyPlayTime-Frame-Seconds: 10
+    DailyPlayTime-Frame-Seconds: 0
     # The Commands that will run once a player reaches the time frame.
     # NOTE: This will run as a server command, make sure to do {playerName} if you want to get the exact player.
     DailyPlayTime-Frame-Commands:
