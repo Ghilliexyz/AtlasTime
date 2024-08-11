@@ -1,3 +1,4 @@
+D:\Development\Minecraft Plugins\AtlasTime\src\main\java\com\atlasplugins\atlastime\commands\admin\ResetDaily.java
 D:\Development\Minecraft Plugins\AtlasTime\src\main\java\com\atlasplugins\atlastime\Main.java
 D:\Development\Minecraft Plugins\AtlasTime\src\main\java\com\atlasplugins\atlastime\commands\user\HelpCommand.java
 D:\Development\Minecraft Plugins\AtlasTime\src\main\java\com\atlasplugins\atlastime\tracker\PlayerTotalPlayTimeTracker.java
@@ -8,3 +9,4 @@ D:\Development\Minecraft Plugins\AtlasTime\src\main\java\com\atlasplugins\atlast
 D:\Development\Minecraft Plugins\AtlasTime\src\main\java\com\atlasplugins\atlastime\tracker\PlayerDailyPlayTimeTracker.java
 D:\Development\Minecraft Plugins\AtlasTime\src\main\java\com\atlasplugins\atlastime\Metrics.java
 D:\Development\Minecraft Plugins\AtlasTime\src\main\java\com\atlasplugins\atlastime\commands\AbstractCommand.java
+D:\Development\Minecraft Plugins\AtlasTime\src\main\java\com\atlasplugins\atlastime\commands\admin\ForceCheck.java

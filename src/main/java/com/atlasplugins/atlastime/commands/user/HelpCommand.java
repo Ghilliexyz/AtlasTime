@@ -21,6 +21,15 @@ public class HelpCommand extends AbstractCommand {
         sender.sendMessage(Main.color("&c● &7Reload command: &c/atime reload"));
         sender.sendMessage(Main.color("&c● &7reloads the Atlas Time configs"));
         sender.sendMessage(Main.color(""));
+        sender.sendMessage(Main.color("&c● &7Reload command: &c/atime time"));
+        sender.sendMessage(Main.color("&c● &7shows your current time played"));
+        sender.sendMessage(Main.color(""));
+        sender.sendMessage(Main.color("&c● &7Reload command: &c/atime resetdaily"));
+        sender.sendMessage(Main.color("&c● &7resets everyones daily timers"));
+        sender.sendMessage(Main.color(""));
+        sender.sendMessage(Main.color("&c● &7Reload command: &c/atime forcecheck"));
+        sender.sendMessage(Main.color("&c● &7does a force check on all timers to give rewards if possible."));
+        sender.sendMessage(Main.color(""));
         sender.sendMessage(Main.color("&c&m&l-----------------------------------------"));
     }
 

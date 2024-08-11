@@ -15,9 +15,11 @@ com\atlasplugins\atlastime\commands\user\HelpCommand.class
 com\atlasplugins\atlastime\Metrics$CustomChart.class
 com\atlasplugins\atlastime\Metrics$JsonObjectBuilder$JsonObject.class
 com\atlasplugins\atlastime\commands\CommandRouter.class
+com\atlasplugins\atlastime\commands\admin\ResetDaily.class
 com\atlasplugins\atlastime\Metrics$SingleLineChart.class
 com\atlasplugins\atlastime\Main.class
 com\atlasplugins\atlastime\Metrics$AdvancedPie.class
+com\atlasplugins\atlastime\commands\admin\ForceCheck.class
 com\atlasplugins\atlastime\Metrics$JsonObjectBuilder.class
 com\atlasplugins\atlastime\commands\user\TimeCommand.class
 com\atlasplugins\atlastime\listeners\onPlayerEvent.class

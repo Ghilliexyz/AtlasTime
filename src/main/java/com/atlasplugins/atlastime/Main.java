@@ -276,5 +276,9 @@ public final class Main extends JavaPlugin {
             executedPlayers.put(playerId, true);
 //            Main.instance.getLogger().info("Marked as executed for player " + playerId);
         }
+
+        public void Reset(){
+            executedPlayers.clear();
+        }
     }
 }

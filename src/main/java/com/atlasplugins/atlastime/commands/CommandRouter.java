@@ -1,6 +1,8 @@
 package com.atlasplugins.atlastime.commands;
 
 import com.atlasplugins.atlastime.Main;
+import com.atlasplugins.atlastime.commands.admin.ForceCheck;
+import com.atlasplugins.atlastime.commands.admin.ResetDaily;
 import com.atlasplugins.atlastime.commands.user.HelpCommand;
 import com.atlasplugins.atlastime.commands.user.ReloadCommand;
 import com.atlasplugins.atlastime.commands.user.TimeCommand;
@@ -29,6 +31,8 @@ public class CommandRouter implements CommandExecutor, TabCompleter {
         registerCommand(new HelpCommand(main));
         registerCommand(new ReloadCommand(main));
         registerCommand(new TimeCommand(main));
+        registerCommand(new ResetDaily(main));
+        registerCommand(new ForceCheck(main));
     }
 
     private void registerCommand(AbstractCommand command) {

@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.File;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
@@ -39,11 +40,12 @@ public class PlayerDailyPlayTimeTracker implements Listener {
 
     private void createTable() throws SQLException {
         String createTableSQL = "CREATE TABLE IF NOT EXISTS player_data (" +
-                "uuid TEXT PRIMARY KEY, " +
+                "uuid TEXT, " +
                 "date DATE, " +
                 "playtime_ticks INTEGER, " +
                 "time_frame_index INTEGER, " +
-                "executed BOOLEAN)";
+                "executed BOOLEAN, " +
+                "PRIMARY KEY (uuid, time_frame_index))";
         try (PreparedStatement pstmt = connection.prepareStatement(createTableSQL)) {
             pstmt.executeUpdate();
         }
@@ -241,8 +243,14 @@ public class PlayerDailyPlayTimeTracker implements Listener {
         return midnight - now;
     }
 
-    private void resetDailyPlayTime() {
-        playerLoginTimes.clear();
+    public void resetDailyPlayTime() {
+
+        checkAllPlayersPlaytime();
+
+        resetDaily();
+
+        checkAllPlayersPlaytime();
+
         // Send Time-Command-Message Message in chat when called.
         if(main.getSettingsConfig().getBoolean("TimeDaily-Info.TimeDaily-Message-Toggle")) {
             for (String resetDailyPlayTimeMessage : main.getSettingsConfig().getStringList("TimeDaily-Info.TimeDaily-Message")) {
@@ -250,7 +258,6 @@ public class PlayerDailyPlayTimeTracker implements Listener {
                 main.getServer().broadcastMessage(Main.color(resetDailyPlayTimeMessage));
             }
         }
-        checkAllPlayersPlaytime();
     }
 
     public void handlePlayerLogin(Player player) {
@@ -261,8 +268,7 @@ public class PlayerDailyPlayTimeTracker implements Listener {
         UpdatePlayerTimer(player);
     }
 
-    public void UpdatePlayerTimer(Player player)
-    {
+    public void UpdatePlayerTimer(Player player) {
         UUID playerId = player.getUniqueId();
 
         // Update the player's total daily playtime in the database
@@ -277,21 +283,24 @@ public class PlayerDailyPlayTimeTracker implements Listener {
         return (logoutTime - loginTime) / 50; // Convert milliseconds to ticks
     }
 
-    // Example refined error handling in updateDailyPlaytime method
     private void updateDailyPlaytime(UUID playerId, long sessionPlaytimeTicks) {
         playerLoginTimes.remove(playerId);
 
         String selectSQL = "SELECT playtime_ticks FROM player_data WHERE uuid = ?";
-        String updateSQL = "INSERT OR REPLACE INTO player_data (uuid, date, playtime_ticks) VALUES (?, ?, ?)";
+        String updateSQL = "UPDATE player_data SET playtime_ticks = ?, date = ? WHERE uuid = ?";
+        String insertSQL = "INSERT INTO player_data (uuid, date, playtime_ticks) VALUES (?, ?, ?)";
 
         try {
             // Retrieve current total playtime
             long totalPlaytimeTicks = 0;
+            boolean rowExists = false;
+
             try (PreparedStatement selectPstmt = connection.prepareStatement(selectSQL)) {
                 selectPstmt.setString(1, playerId.toString());
                 try (ResultSet rs = selectPstmt.executeQuery()) {
                     if (rs.next()) {
                         totalPlaytimeTicks = rs.getLong("playtime_ticks");
+                        rowExists = true;
                     }
                 }
             }
@@ -299,17 +308,90 @@ public class PlayerDailyPlayTimeTracker implements Listener {
             // Update total playtime
             totalPlaytimeTicks += sessionPlaytimeTicks;
 
-            try (PreparedStatement updatePstmt = connection.prepareStatement(updateSQL)) {
-                updatePstmt.setString(1, playerId.toString());
-                updatePstmt.setTimestamp(2, new Timestamp(System.currentTimeMillis())); // Use Timestamp for more precision
-                updatePstmt.setLong(3, totalPlaytimeTicks);
-                updatePstmt.executeUpdate();
+            if (rowExists) {
+                // If the row exists, update it
+                try (PreparedStatement updatePstmt = connection.prepareStatement(updateSQL)) {
+                    updatePstmt.setLong(1, totalPlaytimeTicks);
+                    updatePstmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+                    updatePstmt.setString(3, playerId.toString());
+                    updatePstmt.executeUpdate();
+                }
+            } else {
+                // If the row does not exist, insert a new one
+                try (PreparedStatement insertPstmt = connection.prepareStatement(insertSQL)) {
+                    insertPstmt.setString(1, playerId.toString());
+                    insertPstmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+                    insertPstmt.setLong(3, totalPlaytimeTicks);
+                    insertPstmt.executeUpdate();
+                }
             }
         } catch (SQLException e) {
             main.getLogger().severe("Failed to update playtime for player " + playerId + ": " + e.getMessage());
         }
 
         playerLoginTimes.put(playerId, System.currentTimeMillis());
+    }
+
+
+    private void resetDaily(){
+
+        playerLoginTimes.clear();
+
+        closeConnection();
+
+        // Step 1: Delete the database file
+        File dbFile = new File(main.getDataFolder(), "DailyPlayTime.db");
+        if (dbFile.exists()) {
+            if (dbFile.delete()) {
+                main.getLogger().info("Database file deleted successfully.");
+            } else {
+                main.getLogger().severe("Failed to delete the database file.");
+                return;  // Abort if the file deletion fails
+            }
+        }
+
+        // Step 2: Recreate the database and table
+        try {
+            openConnection();  // Reopen the connection (will create a new database file)
+            createTable();     // Recreate the table structure
+            loadExecutionStatus();
+        } catch (SQLException e) {
+            main.getLogger().severe("Failed to recreate the database and table: " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+
+        // Step 3: Re-add players who are currently online
+        String insertPlayerDataSQL = "INSERT OR REPLACE INTO player_data (uuid, date, playtime_ticks, time_frame_index, executed) VALUES (?, ?, ?, ?, ?)";
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            UUID playerId = player.getUniqueId();
+
+            playerLoginTimes.put(player.getUniqueId(), System.currentTimeMillis());
+
+            try (PreparedStatement insertPstmt = connection.prepareStatement(insertPlayerDataSQL)) {
+                insertPstmt.setString(1, playerId.toString());
+                insertPstmt.setDate(2, new java.sql.Date(System.currentTimeMillis())); // Store current date
+                insertPstmt.setLong(3, getPlayerTime(player));  // Get the player's current session playtime in ticks
+                insertPstmt.setInt(4, 0);   // Reset time_frame_index to 0
+                insertPstmt.setBoolean(5, false);  // Set executed to false
+                insertPstmt.executeUpdate();
+            } catch (SQLException e) {
+                main.getLogger().severe("Failed to re-add player " + playerId + ": " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
+
+        List<Main.DailyPlayTimeFrames> dailyPlayTimeFrames = main.getDailyPlayTimeFrames();
+
+        for (Main.DailyPlayTimeFrames timeFrames : dailyPlayTimeFrames) {
+            if(!dailyPlayTimeFrames.isEmpty())
+            {
+                timeFrames.Reset();
+            }
+        }
+
+        main.getLogger().info("Database reset complete and online players have been re-added.");
     }
 
     public void closeConnection() {

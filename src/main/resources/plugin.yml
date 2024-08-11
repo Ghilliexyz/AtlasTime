@@ -26,3 +26,9 @@ permissions:
   atlastime.time:
     description: Permission needed to use the time command.
     default: false
+  atlastime.resetdaily:
+    description: Permission needed to use the reset daily timers command.
+    default: false
+  atlastime.forcecheck:
+    description: Permission needed to use the reset daily timers command.
+    default: false

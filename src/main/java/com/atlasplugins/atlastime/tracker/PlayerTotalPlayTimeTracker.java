@@ -73,6 +73,7 @@ public class PlayerTotalPlayTimeTracker {
                 int timeFrameIndex = rs.getInt("time_frame_index");
                 boolean executed = rs.getBoolean("executed");
 
+                // Handle the retrieved data
                 if (executed) {
                     if(main.totalPlayTimeFrames == null) return;
                     if (timeFrameIndex >= 0 && timeFrameIndex < main.totalPlayTimeFrames.size()) {
@@ -90,7 +91,9 @@ public class PlayerTotalPlayTimeTracker {
         boolean enableTotalRewards = main.getSettingsConfig().getBoolean("Time-Trackers.TotalPlayTime-Tracker");
         if(enableTotalRewards) {
             for (Player player : Bukkit.getOnlinePlayers()) {
+
                 UUID playerId = player.getUniqueId();
+
                 int playtimeSeconds = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / 20; // convert ticks to seconds
                 int playtimeMinutes = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60); // convert ticks to minutes
                 int playtimeHours = player.getStatistic(Statistic.PLAY_ONE_MINUTE) / (20 * 60 * 60); // convert ticks to hours
