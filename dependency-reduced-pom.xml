@@ -4,7 +4,7 @@
   <groupId>com.atlasplugins</groupId>
   <artifactId>AtlasTime</artifactId>
   <name>AtlasTime</name>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <description>This plugin tracks players time and allows you to run commands once a player has reached a set amount
         of play time</description>
   <build>
@@ -19,8 +19,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.1</version>
         <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
+          <release>${java.version}</release>
         </configuration>
       </plugin>
       <plugin>
@@ -55,7 +54,7 @@
     <dependency>
       <groupId>org.spigotmc</groupId>
       <artifactId>spigot-api</artifactId>
-      <version>1.21-R0.1-SNAPSHOT</version>
+      <version>26.2-R0.1-SNAPSHOT</version>
       <scope>provided</scope>
     </dependency>
     <dependency>

@@ -139,12 +139,12 @@ public class PlayerDailyPlayTimeTracker implements Listener {
                         }
 
                         // Sound
-                        Sound timeCompletedSound = Sound.valueOf(main.getSettingsConfig().getString("TimeSounds.Time-Completed-Sound"));
-                        float timeCompletedVolume = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Volume");
-                        float timeCompletedPitch = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Pitch");
+                        Sound timeCompletedSound = main.getSound(main.getSettingsConfig().getString("TimeSounds.Time-Completed-Sound"));
+                        float timeCompletedVolume = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Volume", 1.0);
+                        float timeCompletedPitch = (float) main.getSettingsConfig().getDouble("TimeSounds.Time-Completed-Pitch", 1.0);
 
                         boolean isCompletedSoundEnabled = main.getSettingsConfig().getBoolean("TimeSounds.Time-Completed-Sound-Toggle");
-                        if (isCompletedSoundEnabled) {
+                        if (isCompletedSoundEnabled && timeCompletedSound != null) {
                             player.playSound(player.getLocation(), timeCompletedSound, timeCompletedVolume, timeCompletedPitch);
                         }
 

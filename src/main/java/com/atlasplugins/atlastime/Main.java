@@ -7,6 +7,7 @@ import com.atlasplugins.atlastime.tracker.PlayerTotalPlayTimeTracker;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -15,6 +16,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -25,6 +29,52 @@ public final class Main extends JavaPlugin {
     // Change chat colors
     public static String color(String string) {
         return ChatColor.translateAlternateColorCodes('&', string);
+    }
+
+    /**
+     * Safely resolves a {@link Sound} from a config value.
+     *
+     * In MC 1.21+ {@code org.bukkit.Sound} is an interface, but Spigot still ships a
+     * static {@code Sound.valueOf(String)} that maps legacy enum-style names to the
+     * correct registry key. We rely on that mapping and only guard against bad/missing
+     * values so a typo in the config logs a warning instead of crashing the tracker.
+     *
+     * @param name the sound name from config (may be null/invalid)
+     * @return the resolved Sound, or null if the name is missing or unrecognised
+     */
+    public Sound getSound(String name) {
+        if (name == null) {
+            getLogger().warning("A sound value was missing from the config; no sound will be played.");
+            return null;
+        }
+        try {
+            return Sound.valueOf(name);
+        } catch (IllegalArgumentException e) {
+            getLogger().warning("Invalid sound '" + name + "' in config; no sound will be played. "
+                    + "See https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html for valid names.");
+            return null;
+        }
+    }
+
+    /**
+     * Back-fills any keys missing from a user's config with the values shipped in the
+     * bundled default resource, while preserving all existing user values. This prevents
+     * NPEs when a server's config predates a newly added key.
+     */
+    private void backfillDefaults(FileConfiguration config, File file, String resourceName) {
+        InputStream defStream = getResource(resourceName);
+        if (defStream == null) {
+            return;
+        }
+        YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(
+                new InputStreamReader(defStream, StandardCharsets.UTF_8));
+        config.setDefaults(defConfig);
+        config.options().copyDefaults(true);
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            getLogger().warning("Failed to back-fill defaults into " + resourceName + ": " + e.getMessage());
+        }
     }
 
     // PlaceholderAPI
@@ -96,7 +146,7 @@ public final class Main extends JavaPlugin {
 
         // Plugin Startup Message
         Bukkit.getConsoleSender().sendMessage(color("&4---------------------"));
-        Bukkit.getConsoleSender().sendMessage(color("&7&l[&c&lAtlas Time&7&l] &e1.0.1"));
+        Bukkit.getConsoleSender().sendMessage(color("&7&l[&c&lAtlas Time&7&l] &e1.1.0"));
         Bukkit.getConsoleSender().sendMessage(color(""));
         Bukkit.getConsoleSender().sendMessage(color("&cMade by _Ghillie"));
         Bukkit.getConsoleSender().sendMessage(color(""));
@@ -114,7 +164,7 @@ public final class Main extends JavaPlugin {
 
         // Plugin Shutdown Message
         Bukkit.getConsoleSender().sendMessage(color("&4---------------------"));
-        Bukkit.getConsoleSender().sendMessage(color("&7&l[&c&lAtlas Time&7&l] &e1.0.1"));
+        Bukkit.getConsoleSender().sendMessage(color("&7&l[&c&lAtlas Time&7&l] &e1.1.0"));
         Bukkit.getConsoleSender().sendMessage(color(""));
         Bukkit.getConsoleSender().sendMessage(color("&cMade by _Ghillie"));
         Bukkit.getConsoleSender().sendMessage(color(""));
@@ -166,6 +216,7 @@ public final class Main extends JavaPlugin {
             saveResource("settings.yml", false);
         }
         settingsConfig = YamlConfiguration.loadConfiguration(settingsConfigFile);
+        backfillDefaults(settingsConfig, settingsConfigFile, "settings.yml");
     }
 
     public void saveTotalPlayTimeConfig() {
@@ -182,6 +233,7 @@ public final class Main extends JavaPlugin {
             saveResource("totalPlayTime.yml", false);
         }
         totalPlayTimeConfig = YamlConfiguration.loadConfiguration(totalPlayTimeConfigFile);
+        backfillDefaults(totalPlayTimeConfig, totalPlayTimeConfigFile, "totalPlayTime.yml");
     }
 
     public void saveDailyPlayTimeConfig() {
@@ -198,6 +250,7 @@ public final class Main extends JavaPlugin {
             saveResource("dailyPlayTime.yml", false);
         }
         dailyPlayTimeConfig = YamlConfiguration.loadConfiguration(dailyPlayTimeConfigFile);
+        backfillDefaults(dailyPlayTimeConfig, dailyPlayTimeConfigFile, "dailyPlayTime.yml");
     }
 
     public List<TotalPlayTimeFrames> getTotalPlayTimeFrames() {
